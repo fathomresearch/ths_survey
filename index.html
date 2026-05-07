@@ -80,36 +80,7 @@
   .end-title { font-size: 22px; font-weight: 600; margin-bottom: 12px; }
   .end-msg { font-size: 15px; color: #666; line-height: 1.6; }
   .placeholder { padding: 20px; background: #f8f8f8; border-radius: 8px; font-size: 13px; color: #888; }
-
-  /* Matrix styles */
-  .matrix-wrap { overflow-x: auto; margin: 0 -28px; padding: 0 28px; }
-  .matrix-table { border-collapse: collapse; width: 100%; min-width: 600px; font-size: 13px; }
-  .matrix-table th {
-    padding: 10px 8px; text-align: center; font-weight: 600; font-size: 12px;
-    border-bottom: 2px solid #e0e0e0; background: #fafafa; position: sticky; top: 0;
-    color: #555; line-height: 1.3; vertical-align: bottom; min-width: 70px;
-  }
-  .matrix-table th:first-child {
-    text-align: left; min-width: 160px; position: sticky; left: 0; z-index: 2; background: #fafafa;
-  }
-  .matrix-table td {
-    padding: 8px; text-align: center; border-bottom: 1px solid #eee;
-  }
-  .matrix-table td:first-child {
-    text-align: left; font-size: 14px; color: #333; position: sticky; left: 0; background: #fff; z-index: 1;
-    padding-right: 12px;
-  }
-  .matrix-table tr:hover td { background: #f8faf9; }
-  .matrix-table tr:hover td:first-child { background: #f0f7f3; }
-  .matrix-table tr.exclusive-row td { border-top: 2px solid #e0e0e0; }
-  .matrix-chk {
-    width: 20px; height: 20px; border-radius: 4px; border: 2px solid #ccc; background: #fff;
-    cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
-    font-size: 12px; color: #fff; font-weight: 700; transition: all 0.15s;
-  }
-  .matrix-chk.checked { border-color: #2c6e49; background: #2c6e49; }
-  .matrix-chk:hover { border-color: #999; }
-  .matrix-chk.checked:hover { border-color: #245a3a; background: #245a3a; }
+  .trip-tag { display: inline-block; padding: 3px 10px; background: #e8f5ee; color: #2c6e49; border-radius: 12px; font-size: 12px; font-weight: 600; margin-bottom: 8px; }
 </style>
 </head>
 <body>
@@ -133,7 +104,7 @@
   <div class="meta-bar">
     <span id="meta-rid">ID: ---</span>
     <span id="meta-device">---</span>
-    <span>v1.0</span>
+    <span>v1.1</span>
   </div>
 </div>
 
@@ -141,7 +112,7 @@
 // ============================================================
 // CONFIG
 // ============================================================
-const CONFIG = {
+var CONFIG = {
   redirects: {
     complete: "https://www.example.com/complete?rid={RID}",
     terminate: "https://www.example.com/terminate?rid={RID}",
@@ -154,9 +125,9 @@ const CONFIG = {
 // ============================================================
 // STATE
 // ============================================================
-const state = {
+var state = {
   answers: {}, otherTexts: {},
-  phase: "screener", // screener | main | end
+  phase: "screener",
   screenerPage: 0, mainPage: 0,
   startTime: Date.now(), elapsed: 0,
   quotaCache: null, isSubmitting: false,
@@ -167,7 +138,7 @@ const state = {
 // UTILITIES
 // ============================================================
 function getDeviceType() {
-  const ua = navigator.userAgent;
+  var ua = navigator.userAgent;
   if (/tablet|ipad|playbook|silk/i.test(ua)) return "tablet";
   if (/mobile|iphone|ipod|android|blackberry|opera mini|iemobile/i.test(ua)) return "mobile";
   return "desktop";
@@ -181,8 +152,8 @@ function formatTime(t) {
 }
 function escHtml(str) { var d=document.createElement("div"); d.textContent=str||""; return d.innerHTML; }
 
-const DEVICE = getDeviceType();
-const RID = getUrlParam("rid") || getUrlParam("RID") || ("test_"+Math.random().toString(36).slice(2,8));
+var DEVICE = getDeviceType();
+var RID = getUrlParam("rid") || getUrlParam("RID") || ("test_"+Math.random().toString(36).slice(2,8));
 
 async function postToSheet(data) {
   try {
@@ -192,10 +163,34 @@ async function postToSheet(data) {
 }
 
 // ============================================================
-// QUESTION DEFINITIONS
+// Q3 TRIP TYPE DEFINITIONS (used for dynamic follow-ups)
 // ============================================================
-// -- SCREENER --
-const SCREENER = [
+var TRIP_TYPES = [
+  { value:"beach", label:"Beach / coastal" },
+  { value:"city", label:"City / urban" },
+  { value:"mountains", label:"Mountains / nature / outdoors" },
+  { value:"countryside", label:"Countryside / rural" },
+  { value:"international", label:"International destination" },
+  { value:"roadtrip", label:"Road trip / driving destination" },
+  { value:"resort", label:"Resort / all-inclusive" },
+  { value:"cruise", label:"Cruise" },
+];
+
+var COMPANION_OPTIONS = [
+  { value:"solo", label:"Solo" },
+  { value:"partner", label:"Romantic partner / spouse" },
+  { value:"friends", label:"Friends" },
+  { value:"family", label:"Family" },
+  { value:"children", label:"Child / children" },
+  { value:"pets", label:"Pet(s)" },
+  { value:"group_tour", label:"Organized group tour" },
+  { value:"strangers", label:"People I did not know well before the trip" },
+];
+
+// ============================================================
+// SCREENER QUESTIONS
+// ============================================================
+var SCREENER = [
   { id:"S1", type:"text_number", section:"Screener", label:"S1", text:"What year were you born?", placeholder:"e.g. 1994" },
   { id:"S2", type:"multi", section:"Screener", label:"S2",
     text:"Have you taken at least one leisure trip in the past 12 months? (A leisure trip means a vacation, weekend getaway, or extended personal trip that included at least one overnight stay.)",
@@ -245,59 +240,81 @@ const SCREENER = [
     ]},
 ];
 
-// -- MAIN SURVEY QUESTIONS --
-const MAIN_QUESTIONS = [
-  // Section 2: Travel Behavior
-  { id:"Q1", type:"single", section:"Travel Behavior", label:"Q1",
+// ============================================================
+// MAIN QUESTIONS (built dynamically because Q3b depends on Q3a)
+// ============================================================
+function buildMainQuestions() {
+  var questions = [];
+
+  // Q1
+  questions.push({ id:"Q1", type:"single", section:"Travel Behavior", label:"Q1",
     text:"Approximately how many leisure trips have you taken in the past 2 years?",
     options:[
       {value:"1-2",label:"1-2 trips"},{value:"3-4",label:"3-4 trips"},
       {value:"5-6",label:"5-6 trips"},{value:"7-9",label:"7-9 trips"},
       {value:"10+",label:"10 or more trips"},
-    ]},
-  { id:"Q2", type:"single", section:"Travel Behavior", label:"Q2",
+    ]});
+
+  // Q2
+  questions.push({ id:"Q2", type:"single", section:"Travel Behavior", label:"Q2",
     text:"How long is your typical leisure trip?",
     options:[
       {value:"1-2",label:"1-2 nights"},{value:"3-4",label:"3-4 nights"},
       {value:"5-7",label:"5-7 nights"},{value:"8-14",label:"8-14 nights"},
       {value:"15+",label:"15+ nights"},
-    ]},
-  { id:"Q3", type:"matrix_multi", section:"Travel Behavior", label:"Q3",
-    text:"What types of destinations have you chosen for each type of leisure trip in the past 2 years?",
-    sub:"Select all destinations that apply for each trip type. If you haven't taken that type of trip, select 'Did not take this type of trip.'",
-    rows:[
-      {value:"beach",label:"Beach / coastal"},
-      {value:"city",label:"City / urban"},
-      {value:"mountains",label:"Mountains / nature / outdoors"},
-      {value:"countryside",label:"Countryside / rural"},
-      {value:"international",label:"International destination"},
-      {value:"roadtrip",label:"Road trip / driving destination within a few hours"},
-      {value:"resort",label:"Resort / all-inclusive"},
-      {value:"smalltown",label:"Small town / local getaway"},
-      {value:"visiting",label:"Visiting friends or family"},
-      {value:"other",label:"Other"},
-      {value:"did_not",label:"Did not take this type of trip", exclusive:true},
-    ],
-    cols:[
-      {value:"solo",label:"Solo trip"},
-      {value:"partner",label:"Trip with partner / spouse"},
-      {value:"friends",label:"Trip with friends"},
-      {value:"family_group",label:"Group family trip"},
-      {value:"children",label:"Trip with child / children"},
-      {value:"pets",label:"Trip with pet(s)"},
-      {value:"group_tour",label:"Group tour / organized travel"},
-      {value:"strangers",label:"Trip with people I did not know well"},
-    ],
-  },
-  { id:"Q4", type:"single", section:"Travel Behavior", label:"Q4",
+    ]});
+
+  // Q3a - Trip types
+  questions.push({ id:"Q3a", type:"multi_other", section:"Travel Behavior", label:"Q3a",
+    text:"What type(s) of leisure trip have you taken in the past 2 years? Please select all that apply.",
+    options: TRIP_TYPES.slice(), // copy
+    otherLabel:"Other"
+  });
+
+  // Q3b - Dynamic companion follow-ups for each selected trip type
+  var selectedTrips = state.answers.Q3a || [];
+  TRIP_TYPES.forEach(function(trip) {
+    if (selectedTrips.includes(trip.value)) {
+      questions.push({
+        id: "Q3b_" + trip.value,
+        type: "multi_other",
+        section: "Travel Behavior",
+        label: "Q3b",
+        tripTag: trip.label,
+        text: "For your " + trip.label + " trip(s), who did you travel with? Please select all that apply.",
+        options: COMPANION_OPTIONS.slice(),
+        otherLabel: "Other"
+      });
+    }
+  });
+
+  // If "other" trip type selected, show companion question for that too
+  if (selectedTrips.includes("other")) {
+    var otherTripText = state.otherTexts.Q3a ? ('"' + state.otherTexts.Q3a + '"') : "Other";
+    questions.push({
+      id: "Q3b_other",
+      type: "multi_other",
+      section: "Travel Behavior",
+      label: "Q3b",
+      tripTag: otherTripText + " trip",
+      text: "For your " + otherTripText + " trip(s), who did you travel with? Please select all that apply.",
+      options: COMPANION_OPTIONS.slice(),
+      otherLabel: "Other"
+    });
+  }
+
+  // Q4
+  questions.push({ id:"Q4", type:"single", section:"Travel Behavior", label:"Q4",
     text:"What is your typical per-person budget for a leisure trip, including accommodation, transportation, food, and activities?",
     options:[
       {value:"under500",label:"Under $500"},{value:"500-999",label:"$500-$999"},
       {value:"1000-1999",label:"$1,000-$1,999"},{value:"2000-2999",label:"$2,000-$2,999"},
       {value:"3000-4999",label:"$3,000-$4,999"},{value:"5000+",label:"$5,000+"},
       {value:"unsure",label:"Not sure / prefer not to say"},
-    ]},
-  { id:"Q5", type:"multi_other", section:"Travel Behavior", label:"Q5",
+    ]});
+
+  // Q5
+  questions.push({ id:"Q5", type:"multi_other", section:"Travel Behavior", label:"Q5",
     text:"What types of accommodation do you typically use when traveling? Select all that apply.",
     options:[
       {value:"hotel",label:"Hotel"},
@@ -308,21 +325,23 @@ const MAIN_QUESTIONS = [
       {value:"camping",label:"Camping / glamping"},
       {value:"housesitting",label:"House sitting, meaning staying in someone else's home in exchange for pet or home care"},
       {value:"exchange",label:"Home exchange"},
-    ], otherLabel:"Other" },
+    ], otherLabel:"Other" });
 
   // Sections 3-7 placeholders
-  { id:"PH_S3", type:"placeholder", section:"Most Recent Trip", label:"Section 3",
-    text:"Q6-Q14A: Most recent trip details, conflict, connection, open-end." },
-  { id:"PH_S4", type:"placeholder", section:"Travel Motivations", label:"Section 4",
-    text:"Q15-Q16: Planning importance and experience frequency (20 items each)." },
-  { id:"PH_S5", type:"placeholder", section:"Pet Travel", label:"Section 5",
+  questions.push({ id:"PH_S3", type:"placeholder", section:"Most Recent Trip", label:"Section 3",
+    text:"Q6-Q14A: Most recent trip details, conflict, connection, open-end." });
+  questions.push({ id:"PH_S4", type:"placeholder", section:"Travel Motivations", label:"Section 4",
+    text:"Q15-Q16: Planning importance and experience frequency (20 items each)." });
+  questions.push({ id:"PH_S5", type:"placeholder", section:"Pet Travel", label:"Section 5",
     text:"Q17-Q20: Pet care, impact, comfort, trusted care.",
-    showIf:function(){ return state.answers.S5==="yes"; } },
-  { id:"PH_S6", type:"placeholder", section:"House Sitting", label:"Section 6",
-    text:"Q21: House sitting motivations." },
-  { id:"PH_S7", type:"placeholder", section:"Demographics", label:"Section 7",
-    text:"D1-D8: Demographics." },
-];
+    showIf:function(){ return state.answers.S5==="yes"; } });
+  questions.push({ id:"PH_S6", type:"placeholder", section:"House Sitting", label:"Section 6",
+    text:"Q21: House sitting motivations." });
+  questions.push({ id:"PH_S7", type:"placeholder", section:"Demographics", label:"Section 7",
+    text:"D1-D8: Demographics." });
+
+  return questions;
+}
 
 // ============================================================
 // VISIBLE LISTS
@@ -331,7 +350,7 @@ function getVisibleScreener() {
   return SCREENER.filter(function(q){ return !q.showIf || q.showIf(); });
 }
 function getVisibleMain() {
-  return MAIN_QUESTIONS.filter(function(q){ return !q.showIf || q.showIf(); });
+  return buildMainQuestions().filter(function(q){ return !q.showIf || q.showIf(); });
 }
 
 // ============================================================
@@ -359,6 +378,7 @@ function renderQuestion(list, idx) {
   if(!q) return;
   var card = document.getElementById("question-card");
   var html = '<div class="sec-label">'+escHtml(q.section)+'</div>';
+  if(q.tripTag) html += '<div class="trip-tag">'+escHtml(q.tripTag)+'</div>';
   html += '<div class="q-text">'+escHtml(q.text)+'</div>';
   if(q.sub) html += '<div class="q-sub">'+escHtml(q.sub)+'</div>';
 
@@ -366,7 +386,6 @@ function renderQuestion(list, idx) {
   else if(q.type==="single") html += renderSingleOpts(q.id, q.options);
   else if(q.type==="multi") html += renderMultiOpts(q.id, q.options);
   else if(q.type==="multi_other") html += renderMultiOpts(q.id, q.options, q.otherLabel);
-  else if(q.type==="matrix_multi") html += renderMatrix(q);
   else if(q.type==="placeholder") html += '<div class="placeholder">'+escHtml(q.text)+'</div>';
 
   html += '<div id="error-msg" class="err hidden"></div>';
@@ -374,7 +393,6 @@ function renderQuestion(list, idx) {
 
   if(q.type==="text_number") bindTextInput(q);
   if(q.type==="single"||q.type==="multi"||q.type==="multi_other") bindOptionClicks(q);
-  if(q.type==="matrix_multi") bindMatrix(q);
 
   updateProgress(list, idx, q);
   updateNavButtons();
@@ -414,29 +432,6 @@ function renderMultiOpts(qid, opts, otherLabel) {
     h += '</div>';
   }
   return h+'</div>';
-}
-
-function renderMatrix(q) {
-  // state.answers[q.id] = { colValue: [rowValue, ...], ... }
-  var data = state.answers[q.id] || {};
-  var h = '<div class="matrix-wrap"><table class="matrix-table"><thead><tr><th></th>';
-  q.cols.forEach(function(c){ h += '<th>'+escHtml(c.label)+'</th>'; });
-  h += '</tr></thead><tbody>';
-  q.rows.forEach(function(r){
-    var cls = r.exclusive ? ' class="exclusive-row"' : '';
-    h += '<tr'+cls+'><td>'+escHtml(r.label)+'</td>';
-    q.cols.forEach(function(c){
-      var colArr = data[c.value]||[];
-      var checked = colArr.includes(r.value);
-      var chkCls = checked ? "matrix-chk checked" : "matrix-chk";
-      h += '<td><div class="'+chkCls+'" data-qid="'+q.id+'" data-col="'+c.value+'" data-row="'+r.value+'" data-exclusive="'+(r.exclusive||false)+'">';
-      h += checked ? '✓' : '';
-      h += '</div></td>';
-    });
-    h += '</tr>';
-  });
-  h += '</tbody></table></div>';
-  return h;
 }
 
 // ============================================================
@@ -493,32 +488,6 @@ function bindOptionClicks(q) {
   }
 }
 
-function bindMatrix(q) {
-  document.querySelectorAll('.matrix-chk').forEach(function(el){
-    el.addEventListener("click", function(){
-      var qid=el.dataset.qid, col=el.dataset.col, row=el.dataset.row;
-      var isExclusive = el.dataset.exclusive === "true";
-      if(!state.answers[qid]) state.answers[qid]={};
-      var data=state.answers[qid];
-      if(!data[col]) data[col]=[];
-      var arr=data[col];
-
-      if(isExclusive){
-        // Exclusive row: clear all others in this column, toggle this
-        if(arr.includes(row)){ data[col]=[]; }
-        else { data[col]=[row]; }
-      } else {
-        // Regular row: remove exclusive if present, toggle this
-        var exIdx = arr.indexOf("did_not");
-        if(exIdx>=0) arr.splice(exIdx,1);
-        var idx = arr.indexOf(row);
-        if(idx>=0) arr.splice(idx,1); else arr.push(row);
-      }
-      render();
-    });
-  });
-}
-
 // ============================================================
 // PROGRESS
 // ============================================================
@@ -528,7 +497,9 @@ function updateProgress(list, idx, q) {
   var current = state.phase==="screener" ? idx : vs.length + idx;
   var pct = Math.round((current/total)*100);
   document.getElementById("progress-fill").style.width = pct+"%";
-  document.getElementById("progress-label").textContent = q.section + ": " + q.label;
+  var label = q.section;
+  if(q.label) label += ": " + q.label;
+  document.getElementById("progress-label").textContent = label;
 }
 
 function updateNavButtons() {
@@ -565,11 +536,14 @@ function renderEnd() {
 }
 
 // ============================================================
-// VALIDATION
+// ERROR HELPERS
 // ============================================================
 function showError(msg){ var el=document.getElementById("error-msg"); if(el){el.textContent=msg;el.classList.remove("hidden");} }
 function clearError(){ var el=document.getElementById("error-msg"); if(el){el.textContent="";el.classList.add("hidden");} }
 
+// ============================================================
+// VALIDATION
+// ============================================================
 function validateScreener() {
   var vs=getVisibleScreener(), q=vs[state.screenerPage]; if(!q) return false;
   var val=state.answers[q.id];
@@ -631,25 +605,7 @@ function validateMain() {
     case "multi_other":
       if(!val||!Array.isArray(val)||val.length===0){showError("Please select at least one option.");return false;}
       return true;
-    case "matrix_multi": {
-      // At least one selection per column that has data, or validate that each col has something
-      // For now: at least one column must have a selection
-      if(!val||typeof val!=="object"||Object.keys(val).length===0){
-        showError("Please make at least one selection in the grid.");return false;
-      }
-      // Check that every column has at least one selection
-      var q3 = vm[state.mainPage];
-      var empty = [];
-      q3.cols.forEach(function(c){
-        if(!val[c.value]||val[c.value].length===0) empty.push(c.label);
-      });
-      if(empty.length>0){
-        showError("Please make a selection for each trip type, or select 'Did not take this type of trip.'");
-        return false;
-      }
-      return true;
-    }
-    case "placeholder": return true; // skip validation for placeholders
+    case "placeholder": return true;
     default: return true;
   }
 }
@@ -673,44 +629,53 @@ async function handleSubmit() {
   var now=new Date(), dur=Math.floor((Date.now()-state.startTime)/1000);
   var by=parseInt(state.answers.S1,10), age=CONFIG.currentYear-by;
 
-  // Flatten Q3 matrix into columns
-  var q3data = state.answers.Q3 || {};
-  var q3flat = {};
-  ["solo","partner","friends","family_group","children","pets","group_tour","strangers"].forEach(function(col){
-    q3flat["Q3_"+col] = (q3data[col]||[]).join("; ");
-  });
+  var rowData = {
+    respondent_id: RID,
+    start_time: new Date(state.startTime).toISOString(),
+    end_time: now.toISOString(),
+    duration_seconds: dur,
+    device_type: DEVICE,
+    status: "complete",
+    // Screener
+    S1_birth_year: state.answers.S1||"",
+    S1_age: isNaN(age)?"":age,
+    S2_trip_types: Array.isArray(state.answers.S2)?state.answers.S2.join("; "):"",
+    S3_relationship: state.answers.S3||"",
+    S4_living: Array.isArray(state.answers.S4)?state.answers.S4.join("; "):"",
+    S4_living_other: state.otherTexts.S4||"",
+    S5_pets: state.answers.S5||"",
+    S6_pet_types: Array.isArray(state.answers.S6)?state.answers.S6.join("; "):"",
+    S6_pet_other: state.otherTexts.S6||"",
+    AC_attention: state.answers.AC||"",
+    // Section 2
+    Q1_trip_count: state.answers.Q1||"",
+    Q2_trip_length: state.answers.Q2||"",
+    Q3a_trip_types: Array.isArray(state.answers.Q3a)?state.answers.Q3a.join("; "):"",
+    Q3a_trip_other: state.otherTexts.Q3a||"",
+    Q4_budget: state.answers.Q4||"",
+    Q5_accommodation: Array.isArray(state.answers.Q5)?state.answers.Q5.join("; "):"",
+    Q5_accommodation_other: state.otherTexts.Q5||"",
+  };
 
-  var rowData = Object.assign({
-    respondent_id:RID,
-    start_time:new Date(state.startTime).toISOString(),
-    end_time:now.toISOString(),
-    duration_seconds:dur,
-    device_type:DEVICE,
-    status:"complete",
-    S1_birth_year:state.answers.S1||"",
-    S1_age:isNaN(age)?"":age,
-    S2_trip_types:Array.isArray(state.answers.S2)?state.answers.S2.join("; "):"",
-    S3_relationship:state.answers.S3||"",
-    S4_living:Array.isArray(state.answers.S4)?state.answers.S4.join("; "):"",
-    S4_living_other:state.otherTexts.S4||"",
-    S5_pets:state.answers.S5||"",
-    S6_pet_types:Array.isArray(state.answers.S6)?state.answers.S6.join("; "):"",
-    S6_pet_other:state.otherTexts.S6||"",
-    AC_attention:state.answers.AC||"",
-    Q1_trip_count:state.answers.Q1||"",
-    Q2_trip_length:state.answers.Q2||"",
-    Q4_budget:state.answers.Q4||"",
-    Q5_accommodation:Array.isArray(state.answers.Q5)?state.answers.Q5.join("; "):"",
-    Q5_accommodation_other:state.otherTexts.Q5||"",
-  }, q3flat);
+  // Add Q3b companion data for each selected trip type
+  var allTripKeys = TRIP_TYPES.map(function(t){ return t.value; }).concat(["other"]);
+  allTripKeys.forEach(function(tripKey) {
+    var qid = "Q3b_" + tripKey;
+    if (state.answers[qid] && Array.isArray(state.answers[qid]) && state.answers[qid].length > 0) {
+      rowData["Q3b_" + tripKey + "_companions"] = state.answers[qid].join("; ");
+      if (state.otherTexts[qid]) {
+        rowData["Q3b_" + tripKey + "_companions_other"] = state.otherTexts[qid];
+      }
+    }
+  });
 
   var result = await postToSheet({
-    action:"submit_response",
-    columns:Object.keys(rowData),
-    responses:rowData,
-    quotaValues:{relationship:state.answers.S3, pets:state.answers.S5},
+    action: "submit_response",
+    columns: Object.keys(rowData),
+    responses: rowData,
+    quotaValues: { relationship: state.answers.S3, pets: state.answers.S5 },
   });
-  console.log("Submit:",result);
+  console.log("Submit:", result);
   state.endType="complete"; state.phase="end"; state.isSubmitting=false;
   render();
 }
@@ -718,7 +683,7 @@ async function handleSubmit() {
 // ============================================================
 // NAVIGATION
 // ============================================================
-function handleNext(){
+function handleNext() {
   clearError();
   if(state.phase==="screener"){
     var r=validateScreener(); if(r==="terminated") return; if(!r) return;
@@ -735,7 +700,7 @@ function handleNext(){
   }
 }
 
-function handleBack(){
+function handleBack() {
   clearError();
   if(state.phase==="screener"){
     if(state.screenerPage>0){ state.screenerPage--; render(); }

@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrustedHousesitters Travel Survey</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Source Sans 3', 'Source Sans Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #fafafa; color: #1a1a1a; min-height: 100vh;
+  }
+  .outer { max-width: 720px; margin: 0 auto; padding: 24px 20px; }
+  .logo { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #2c6e49; margin-bottom: 4px; }
+  .progress-wrap { margin-bottom: 24px; }
+  .progress-track { height: 4px; background: #e0e0e0; border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: #2c6e49; border-radius: 2px; transition: width 0.4s ease; }
+  .progress-meta { font-size: 12px; color: #888; margin-top: 6px; display: flex; justify-content: space-between; }
+  .card { background: #fff; border-radius: 10px; padding: 32px 28px; box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04); margin-bottom: 20px; }
+  .sec-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #2c6e49; margin-bottom: 8px; }
+  .q-text { font-size: 16px; font-weight: 500; line-height: 1.5; color: #1a1a1a; margin-bottom: 20px; }
+  .q-sub { font-size: 13px; color: #888; margin-bottom: 16px; margin-top: -12px; }
+  .opt-group { display: flex; flex-direction: column; gap: 8px; }
+  .opt {
+    display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px;
+    border: 1.5px solid #ddd; background: #fff; cursor: pointer; transition: all 0.15s ease;
+    font-size: 15px; line-height: 1.4; user-select: none;
+  }
+  .opt:hover { border-color: #bbb; }
+  .opt.selected { border-color: #2c6e49; background: #f0f7f3; }
+  .radio-circle {
+    width: 18px; height: 18px; border-radius: 50%; border: 2px solid #ccc;
+    background: #fff; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+  }
+  .opt.selected .radio-circle { border-color: #2c6e49; background: #2c6e49; }
+  .radio-dot { width: 6px; height: 6px; border-radius: 50%; background: #fff; display: none; }
+  .opt.selected .radio-dot { display: block; }
+  .chk-box {
+    width: 18px; height: 18px; border-radius: 4px; border: 2px solid #ccc;
+    background: #fff; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: #fff; font-weight: 700; transition: all 0.15s;
+  }
+  .opt.selected .chk-box { border-color: #2c6e49; background: #2c6e49; }
+  .chk-mark { display: none; }
+  .opt.selected .chk-mark { display: inline; }
+  .other-row {
+    display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px;
+    border: 1.5px solid #ddd; background: #fff; font-size: 15px;
+  }
+  .other-row.selected { border-color: #2c6e49; background: #f0f7f3; }
+  .other-row .chk-box { cursor: pointer; }
+  .other-row.selected .chk-box { border-color: #2c6e49; background: #2c6e49; }
+  .other-row.selected .chk-mark { display: inline; }
+  .other-input { flex: 1; border: none; outline: none; font-size: 15px; font-family: inherit; background: transparent; }
+  .text-input {
+    width: 100%; padding: 12px 14px; font-size: 15px; border: 1.5px solid #ddd;
+    border-radius: 8px; outline: none; font-family: inherit;
+  }
+  .text-input:focus { border-color: #2c6e49; }
+  .nav-row { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; gap: 12px; }
+  .btn-pri {
+    padding: 12px 32px; font-size: 15px; font-weight: 600; color: #fff; background: #2c6e49;
+    border: none; border-radius: 8px; cursor: pointer; transition: background 0.15s;
+  }
+  .btn-pri:hover { background: #245a3a; }
+  .btn-pri:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-sec {
+    padding: 12px 24px; font-size: 15px; font-weight: 500; color: #555; background: transparent;
+    border: 1.5px solid #ddd; border-radius: 8px; cursor: pointer;
+  }
+  .btn-sec:hover { border-color: #bbb; }
+  .btn-sec:disabled { opacity: 0.4; cursor: not-allowed; }
+  .meta-bar {
+    display: flex; justify-content: space-between; font-size: 11px; color: #aaa;
+    padding: 8px 0; border-top: 1px solid #eee; margin-top: 32px;
+  }
+  .err { color: #c0392b; font-size: 13px; margin-top: 12px; padding: 8px 12px; background: #fdf0ef; border-radius: 6px; }
+  .hidden { display: none; }
+  .end-screen { text-align: center; padding: 60px 20px; }
+  .end-title { font-size: 22px; font-weight: 600; margin-bottom: 12px; }
+  .end-msg { font-size: 15px; color: #666; line-height: 1.6; }
+  .placeholder { padding: 20px; background: #f8f8f8; border-radius: 8px; font-size: 13px; color: #888; }
+
+  /* Matrix styles */
+  .matrix-wrap { overflow-x: auto; margin: 0 -28px; padding: 0 28px; }
+  .matrix-table { border-collapse: collapse; width: 100%; min-width: 600px; font-size: 13px; }
+  .matrix-table th {
+    padding: 10px 8px; text-align: center; font-weight: 600; font-size: 12px;
+    border-bottom: 2px solid #e0e0e0; background: #fafafa; position: sticky; top: 0;
+    color: #555; line-height: 1.3; vertical-align: bottom; min-width: 70px;
+  }
+  .matrix-table th:first-child {
+    text-align: left; min-width: 160px; position: sticky; left: 0; z-index: 2; background: #fafafa;
+  }
+  .matrix-table td {
+    padding: 8px; text-align: center; border-bottom: 1px solid #eee;
+  }
+  .matrix-table td:first-child {
+    text-align: left; font-size: 14px; color: #333; position: sticky; left: 0; background: #fff; z-index: 1;
+    padding-right: 12px;
+  }
+  .matrix-table tr:hover td { background: #f8faf9; }
+  .matrix-table tr:hover td:first-child { background: #f0f7f3; }
+  .matrix-table tr.exclusive-row td { border-top: 2px solid #e0e0e0; }
+  .matrix-chk {
+    width: 20px; height: 20px; border-radius: 4px; border: 2px solid #ccc; background: #fff;
+    cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 12px; color: #fff; font-weight: 700; transition: all 0.15s;
+  }
+  .matrix-chk.checked { border-color: #2c6e49; background: #2c6e49; }
+  .matrix-chk:hover { border-color: #999; }
+  .matrix-chk.checked:hover { border-color: #245a3a; background: #245a3a; }
+</style>
+</head>
+<body>
+
+<div class="outer" id="app">
+  <div id="header-area" style="margin-bottom:32px">
+    <div class="logo">TrustedHousesitters</div>
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="progress-meta">
+        <span id="progress-label"></span>
+        <span id="timer-display">Time: 0s</span>
+      </div>
+    </div>
+  </div>
+  <div class="card" id="question-card"></div>
+  <div class="nav-row">
+    <button class="btn-sec" id="btn-back" disabled>Back</button>
+    <button class="btn-pri" id="btn-next">Next</button>
+  </div>
+  <div class="meta-bar">
+    <span id="meta-rid">ID: ---</span>
+    <span id="meta-device">---</span>
+    <span>v1.0</span>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const CONFIG = {
+  redirects: {
+    complete: "https://www.example.com/complete?rid={RID}",
+    terminate: "https://www.example.com/terminate?rid={RID}",
+    quotaFull: "https://www.example.com/quotafull?rid={RID}",
+  },
+  apiUrl: "https://script.google.com/macros/s/AKfycbwVW6Z7vnxYenzMKPm1ukTg9KfjUswPnp9M1JnQAvdEeWStUbSFkc7NiRt-rUl3zbHa/exec",
+  minAge: 21, maxAge: 45, currentYear: 2026,
+};
+
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  answers: {}, otherTexts: {},
+  phase: "screener", // screener | main | end
+  screenerPage: 0, mainPage: 0,
+  startTime: Date.now(), elapsed: 0,
+  quotaCache: null, isSubmitting: false,
+  endType: "", endReason: "",
+};
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function getDeviceType() {
+  const ua = navigator.userAgent;
+  if (/tablet|ipad|playbook|silk/i.test(ua)) return "tablet";
+  if (/mobile|iphone|ipod|android|blackberry|opera mini|iemobile/i.test(ua)) return "mobile";
+  return "desktop";
+}
+function getUrlParam(p) {
+  try { return new URLSearchParams(window.location.search).get(p) || ""; } catch(e) { return ""; }
+}
+function formatTime(t) {
+  var m = Math.floor(t/60), s = t%60;
+  return m > 0 ? m+"m "+String(s).padStart(2,"0")+"s" : s+"s";
+}
+function escHtml(str) { var d=document.createElement("div"); d.textContent=str||""; return d.innerHTML; }
+
+const DEVICE = getDeviceType();
+const RID = getUrlParam("rid") || getUrlParam("RID") || ("test_"+Math.random().toString(36).slice(2,8));
+
+async function postToSheet(data) {
+  try {
+    var r = await fetch(CONFIG.apiUrl, { method:"POST", headers:{"Content-Type":"text/plain"}, body:JSON.stringify(data) });
+    return await r.json();
+  } catch(e) { console.error("Post failed:",e); return {error:e.toString()}; }
+}
+
+// ============================================================
+// QUESTION DEFINITIONS
+// ============================================================
+// -- SCREENER --
+const SCREENER = [
+  { id:"S1", type:"text_number", section:"Screener", label:"S1", text:"What year were you born?", placeholder:"e.g. 1994" },
+  { id:"S2", type:"multi", section:"Screener", label:"S2",
+    text:"Have you taken at least one leisure trip in the past 12 months? (A leisure trip means a vacation, weekend getaway, or extended personal trip that included at least one overnight stay.)",
+    options:[
+      {value:"leisure",label:"I've taken a leisure trip."},
+      {value:"work",label:"I've taken a work trip."},
+      {value:"canceled",label:"I had to cancel a trip."},
+      {value:"none",label:"I didn't plan any trips."},
+    ]},
+  { id:"S3", type:"single", section:"Screener", label:"S3",
+    text:"Which of the following best describes your current relationship status?",
+    options:[
+      {value:"single",label:"Single, not dating anyone"},
+      {value:"dating",label:"Dating, but not in a committed relationship"},
+      {value:"inRelationship",label:"In a relationship"},
+      {value:"married",label:"Married"},
+      {value:"pnts",label:"Prefer not to say"},
+    ]},
+  { id:"S4", type:"multi_other", section:"Screener", label:"S4",
+    text:"Which best describes your current living situation?",
+    options:[
+      {value:"alone",label:"I live alone without roommate"},
+      {value:"partner",label:"I live with a romantic partner or spouse"},
+      {value:"roommates",label:"I live with roommate(s)"},
+      {value:"children",label:"I live with children"},
+      {value:"family",label:"I live with parents or other family members"},
+      {value:"split",label:"I split time across multiple households"},
+    ], otherLabel:"Other" },
+  { id:"S5", type:"single", section:"Screener", label:"S5",
+    text:"Do you currently own any pets that live with you?",
+    options:[{value:"yes",label:"Yes"},{value:"no",label:"No"}] },
+  { id:"S6", type:"multi_other", section:"Screener", label:"S6",
+    text:"What type of pet or pets do you have?",
+    showIf:function(){ return state.answers.S5==="yes"; },
+    options:[
+      {value:"dog",label:"Dog(s)"},{value:"cat",label:"Cat(s)"},{value:"bird",label:"Bird(s)"},
+      {value:"fish",label:"Fish"},{value:"reptile",label:"Reptile(s)"},
+      {value:"small_mammal",label:"Small mammal(s), such as rabbit, hamster, or guinea pig"},
+    ], otherLabel:"Other" },
+  { id:"AC", type:"single", section:"Screener", label:"Attention Check",
+    text:"If today is Monday and yesterday was Sunday, what day is tomorrow?",
+    options:[
+      {value:"monday",label:"Monday"},{value:"tuesday",label:"Tuesday"},
+      {value:"wednesday",label:"Wednesday"},{value:"thursday",label:"Thursday"},
+      {value:"friday",label:"Friday"},{value:"saturday",label:"Saturday"},
+      {value:"sunday",label:"Sunday"},
+    ]},
+];
+
+// -- MAIN SURVEY QUESTIONS --
+const MAIN_QUESTIONS = [
+  // Section 2: Travel Behavior
+  { id:"Q1", type:"single", section:"Travel Behavior", label:"Q1",
+    text:"Approximately how many leisure trips have you taken in the past 2 years?",
+    options:[
+      {value:"1-2",label:"1-2 trips"},{value:"3-4",label:"3-4 trips"},
+      {value:"5-6",label:"5-6 trips"},{value:"7-9",label:"7-9 trips"},
+      {value:"10+",label:"10 or more trips"},
+    ]},
+  { id:"Q2", type:"single", section:"Travel Behavior", label:"Q2",
+    text:"How long is your typical leisure trip?",
+    options:[
+      {value:"1-2",label:"1-2 nights"},{value:"3-4",label:"3-4 nights"},
+      {value:"5-7",label:"5-7 nights"},{value:"8-14",label:"8-14 nights"},
+      {value:"15+",label:"15+ nights"},
+    ]},
+  { id:"Q3", type:"matrix_multi", section:"Travel Behavior", label:"Q3",
+    text:"What types of destinations have you chosen for each type of leisure trip in the past 2 years?",
+    sub:"Select all destinations that apply for each trip type. If you haven't taken that type of trip, select 'Did not take this type of trip.'",
+    rows:[
+      {value:"beach",label:"Beach / coastal"},
+      {value:"city",label:"City / urban"},
+      {value:"mountains",label:"Mountains / nature / outdoors"},
+      {value:"countryside",label:"Countryside / rural"},
+      {value:"international",label:"International destination"},
+      {value:"roadtrip",label:"Road trip / driving destination within a few hours"},
+      {value:"resort",label:"Resort / all-inclusive"},
+      {value:"smalltown",label:"Small town / local getaway"},
+      {value:"visiting",label:"Visiting friends or family"},
+      {value:"other",label:"Other"},
+      {value:"did_not",label:"Did not take this type of trip", exclusive:true},
+    ],
+    cols:[
+      {value:"solo",label:"Solo trip"},
+      {value:"partner",label:"Trip with partner / spouse"},
+      {value:"friends",label:"Trip with friends"},
+      {value:"family_group",label:"Group family trip"},
+      {value:"children",label:"Trip with child / children"},
+      {value:"pets",label:"Trip with pet(s)"},
+      {value:"group_tour",label:"Group tour / organized travel"},
+      {value:"strangers",label:"Trip with people I did not know well"},
+    ],
+  },
+  { id:"Q4", type:"single", section:"Travel Behavior", label:"Q4",
+    text:"What is your typical per-person budget for a leisure trip, including accommodation, transportation, food, and activities?",
+    options:[
+      {value:"under500",label:"Under $500"},{value:"500-999",label:"$500-$999"},
+      {value:"1000-1999",label:"$1,000-$1,999"},{value:"2000-2999",label:"$2,000-$2,999"},
+      {value:"3000-4999",label:"$3,000-$4,999"},{value:"5000+",label:"$5,000+"},
+      {value:"unsure",label:"Not sure / prefer not to say"},
+    ]},
+  { id:"Q5", type:"multi_other", section:"Travel Behavior", label:"Q5",
+    text:"What types of accommodation do you typically use when traveling? Select all that apply.",
+    options:[
+      {value:"hotel",label:"Hotel"},
+      {value:"rental",label:"Short-term rental, such as Airbnb or Vrbo"},
+      {value:"friends_family",label:"Staying with friends or family"},
+      {value:"hostel",label:"Hostel"},
+      {value:"resort",label:"Resort / all-inclusive"},
+      {value:"camping",label:"Camping / glamping"},
+      {value:"housesitting",label:"House sitting, meaning staying in someone else's home in exchange for pet or home care"},
+      {value:"exchange",label:"Home exchange"},
+    ], otherLabel:"Other" },
+
+  // Sections 3-7 placeholders
+  { id:"PH_S3", type:"placeholder", section:"Most Recent Trip", label:"Section 3",
+    text:"Q6-Q14A: Most recent trip details, conflict, connection, open-end." },
+  { id:"PH_S4", type:"placeholder", section:"Travel Motivations", label:"Section 4",
+    text:"Q15-Q16: Planning importance and experience frequency (20 items each)." },
+  { id:"PH_S5", type:"placeholder", section:"Pet Travel", label:"Section 5",
+    text:"Q17-Q20: Pet care, impact, comfort, trusted care.",
+    showIf:function(){ return state.answers.S5==="yes"; } },
+  { id:"PH_S6", type:"placeholder", section:"House Sitting", label:"Section 6",
+    text:"Q21: House sitting motivations." },
+  { id:"PH_S7", type:"placeholder", section:"Demographics", label:"Section 7",
+    text:"D1-D8: Demographics." },
+];
+
+// ============================================================
+// VISIBLE LISTS
+// ============================================================
+function getVisibleScreener() {
+  return SCREENER.filter(function(q){ return !q.showIf || q.showIf(); });
+}
+function getVisibleMain() {
+  return MAIN_QUESTIONS.filter(function(q){ return !q.showIf || q.showIf(); });
+}
+
+// ============================================================
+// TIMER
+// ============================================================
+setInterval(function(){
+  state.elapsed = Math.floor((Date.now()-state.startTime)/1000);
+  var el = document.getElementById("timer-display");
+  if(el) el.textContent = "Time: "+formatTime(state.elapsed);
+},1000);
+
+// ============================================================
+// RENDER ENGINE
+// ============================================================
+function render() {
+  document.getElementById("meta-rid").textContent = "ID: "+RID;
+  document.getElementById("meta-device").textContent = DEVICE;
+  if(state.phase==="end"){ renderEnd(); return; }
+  if(state.phase==="screener"){ renderQuestion(getVisibleScreener(), state.screenerPage); return; }
+  renderQuestion(getVisibleMain(), state.mainPage);
+}
+
+function renderQuestion(list, idx) {
+  var q = list[idx];
+  if(!q) return;
+  var card = document.getElementById("question-card");
+  var html = '<div class="sec-label">'+escHtml(q.section)+'</div>';
+  html += '<div class="q-text">'+escHtml(q.text)+'</div>';
+  if(q.sub) html += '<div class="q-sub">'+escHtml(q.sub)+'</div>';
+
+  if(q.type==="text_number") html += renderTextInput(q);
+  else if(q.type==="single") html += renderSingleOpts(q.id, q.options);
+  else if(q.type==="multi") html += renderMultiOpts(q.id, q.options);
+  else if(q.type==="multi_other") html += renderMultiOpts(q.id, q.options, q.otherLabel);
+  else if(q.type==="matrix_multi") html += renderMatrix(q);
+  else if(q.type==="placeholder") html += '<div class="placeholder">'+escHtml(q.text)+'</div>';
+
+  html += '<div id="error-msg" class="err hidden"></div>';
+  card.innerHTML = html;
+
+  if(q.type==="text_number") bindTextInput(q);
+  if(q.type==="single"||q.type==="multi"||q.type==="multi_other") bindOptionClicks(q);
+  if(q.type==="matrix_multi") bindMatrix(q);
+
+  updateProgress(list, idx, q);
+  updateNavButtons();
+}
+
+function renderTextInput(q) {
+  return '<input type="text" inputmode="numeric" class="text-input" id="input-field" placeholder="'+escHtml(q.placeholder)+'" value="'+escHtml(state.answers[q.id]||"")+'">';
+}
+
+function renderSingleOpts(qid, opts) {
+  var val = state.answers[qid]||"";
+  var h = '<div class="opt-group">';
+  opts.forEach(function(o){
+    var sel = val===o.value?" selected":"";
+    h += '<div class="opt'+sel+'" data-value="'+o.value+'" data-qid="'+qid+'" data-type="single">';
+    h += '<div class="radio-circle"><div class="radio-dot"></div></div>';
+    h += '<span>'+escHtml(o.label)+'</span></div>';
+  });
+  return h+'</div>';
+}
+
+function renderMultiOpts(qid, opts, otherLabel) {
+  var vals = state.answers[qid]||[];
+  var h = '<div class="opt-group">';
+  opts.forEach(function(o){
+    var sel = vals.includes(o.value)?" selected":"";
+    h += '<div class="opt'+sel+'" data-value="'+o.value+'" data-qid="'+qid+'" data-type="multi">';
+    h += '<div class="chk-box"><span class="chk-mark">✓</span></div>';
+    h += '<span>'+escHtml(o.label)+'</span></div>';
+  });
+  if(otherLabel){
+    var oSel = vals.includes("other")?" selected":"";
+    h += '<div class="other-row'+oSel+'" data-qid="'+qid+'">';
+    h += '<div class="chk-box" data-value="other" data-qid="'+qid+'" data-type="multi-other-chk"><span class="chk-mark">✓</span></div>';
+    h += '<span style="white-space:nowrap">'+escHtml(otherLabel)+':</span>';
+    h += '<input class="other-input" id="other-input-'+qid+'" placeholder="Please specify" value="'+escHtml(state.otherTexts[qid]||"")+'">';
+    h += '</div>';
+  }
+  return h+'</div>';
+}
+
+function renderMatrix(q) {
+  // state.answers[q.id] = { colValue: [rowValue, ...], ... }
+  var data = state.answers[q.id] || {};
+  var h = '<div class="matrix-wrap"><table class="matrix-table"><thead><tr><th></th>';
+  q.cols.forEach(function(c){ h += '<th>'+escHtml(c.label)+'</th>'; });
+  h += '</tr></thead><tbody>';
+  q.rows.forEach(function(r){
+    var cls = r.exclusive ? ' class="exclusive-row"' : '';
+    h += '<tr'+cls+'><td>'+escHtml(r.label)+'</td>';
+    q.cols.forEach(function(c){
+      var colArr = data[c.value]||[];
+      var checked = colArr.includes(r.value);
+      var chkCls = checked ? "matrix-chk checked" : "matrix-chk";
+      h += '<td><div class="'+chkCls+'" data-qid="'+q.id+'" data-col="'+c.value+'" data-row="'+r.value+'" data-exclusive="'+(r.exclusive||false)+'">';
+      h += checked ? '✓' : '';
+      h += '</div></td>';
+    });
+    h += '</tr>';
+  });
+  h += '</tbody></table></div>';
+  return h;
+}
+
+// ============================================================
+// EVENT BINDING
+// ============================================================
+function bindTextInput(q) {
+  var inp = document.getElementById("input-field");
+  if(!inp) return;
+  inp.focus();
+  inp.addEventListener("input", function(){
+    state.answers[q.id] = inp.value.replace(/[^0-9]/g,"").slice(0,4);
+    inp.value = state.answers[q.id];
+  });
+  inp.addEventListener("keydown", function(e){ if(e.key==="Enter") handleNext(); });
+}
+
+function bindOptionClicks(q) {
+  document.querySelectorAll('[data-type="single"]').forEach(function(el){
+    el.addEventListener("click", function(){
+      state.answers[el.dataset.qid] = el.dataset.value;
+      render();
+    });
+  });
+  document.querySelectorAll('[data-type="multi"]').forEach(function(el){
+    el.addEventListener("click", function(){
+      var qid=el.dataset.qid, val=el.dataset.value;
+      if(!state.answers[qid]) state.answers[qid]=[];
+      var a=state.answers[qid], i=a.indexOf(val);
+      if(i>=0) a.splice(i,1); else a.push(val);
+      render();
+    });
+  });
+  document.querySelectorAll('[data-type="multi-other-chk"]').forEach(function(el){
+    el.addEventListener("click", function(e){
+      e.stopPropagation();
+      var qid=el.dataset.qid;
+      if(!state.answers[qid]) state.answers[qid]=[];
+      var a=state.answers[qid], i=a.indexOf("other");
+      if(i>=0) a.splice(i,1); else a.push("other");
+      render();
+    });
+  });
+  var otherInp = document.getElementById("other-input-"+q.id);
+  if(otherInp){
+    otherInp.addEventListener("input", function(){
+      state.otherTexts[q.id] = otherInp.value;
+      if(otherInp.value && !state.answers[q.id]) state.answers[q.id]=[];
+      if(otherInp.value && !state.answers[q.id].includes("other")){
+        state.answers[q.id].push("other");
+        render();
+      }
+    });
+    otherInp.addEventListener("click", function(e){ e.stopPropagation(); });
+  }
+}
+
+function bindMatrix(q) {
+  document.querySelectorAll('.matrix-chk').forEach(function(el){
+    el.addEventListener("click", function(){
+      var qid=el.dataset.qid, col=el.dataset.col, row=el.dataset.row;
+      var isExclusive = el.dataset.exclusive === "true";
+      if(!state.answers[qid]) state.answers[qid]={};
+      var data=state.answers[qid];
+      if(!data[col]) data[col]=[];
+      var arr=data[col];
+
+      if(isExclusive){
+        // Exclusive row: clear all others in this column, toggle this
+        if(arr.includes(row)){ data[col]=[]; }
+        else { data[col]=[row]; }
+      } else {
+        // Regular row: remove exclusive if present, toggle this
+        var exIdx = arr.indexOf("did_not");
+        if(exIdx>=0) arr.splice(exIdx,1);
+        var idx = arr.indexOf(row);
+        if(idx>=0) arr.splice(idx,1); else arr.push(row);
+      }
+      render();
+    });
+  });
+}
+
+// ============================================================
+// PROGRESS
+// ============================================================
+function updateProgress(list, idx, q) {
+  var vs = getVisibleScreener(), vm = getVisibleMain();
+  var total = vs.length + vm.length;
+  var current = state.phase==="screener" ? idx : vs.length + idx;
+  var pct = Math.round((current/total)*100);
+  document.getElementById("progress-fill").style.width = pct+"%";
+  document.getElementById("progress-label").textContent = q.section + ": " + q.label;
+}
+
+function updateNavButtons() {
+  var backBtn = document.getElementById("btn-back");
+  var nextBtn = document.getElementById("btn-next");
+  if(state.phase==="screener"){
+    backBtn.disabled = state.screenerPage===0;
+    nextBtn.textContent = "Next"; nextBtn.disabled = false;
+  } else {
+    var vm = getVisibleMain();
+    backBtn.disabled = false;
+    nextBtn.textContent = state.mainPage>=vm.length-1 ? "Submit" : "Next";
+    nextBtn.disabled = state.isSubmitting;
+  }
+}
+
+// ============================================================
+// END SCREEN
+// ============================================================
+function renderEnd() {
+  document.getElementById("header-area").style.display="none";
+  document.querySelector(".nav-row").style.display="none";
+  document.querySelector(".meta-bar").style.display="none";
+  var card=document.getElementById("question-card");
+  var t=state.endType, title, msg, color="#1a1a1a";
+  if(t==="terminated"){ title="Thank you for your interest"; msg="Unfortunately, you do not qualify for this survey. We appreciate your time."; }
+  else if(t==="quotaFull"){ title="Thank you for your interest"; msg="We have already reached the number of responses needed for your group. We appreciate your time."; }
+  else { title="Thank you!"; msg="Your responses have been recorded. Duration: "+formatTime(state.elapsed); color="#2c6e49"; }
+  var h='<div class="end-screen"><div class="end-title" style="color:'+color+'">'+title+'</div>';
+  h+='<div class="end-msg">'+msg+'</div>';
+  if(t!=="complete") h+='<div style="font-size:11px;color:#bbb;margin-top:16px">Ref: '+RID+'</div>';
+  h+='</div>';
+  card.innerHTML=h;
+}
+
+// ============================================================
+// VALIDATION
+// ============================================================
+function showError(msg){ var el=document.getElementById("error-msg"); if(el){el.textContent=msg;el.classList.remove("hidden");} }
+function clearError(){ var el=document.getElementById("error-msg"); if(el){el.textContent="";el.classList.add("hidden");} }
+
+function validateScreener() {
+  var vs=getVisibleScreener(), q=vs[state.screenerPage]; if(!q) return false;
+  var val=state.answers[q.id];
+  switch(q.id){
+    case "S1": {
+      var y=parseInt(val,10);
+      if(!val||isNaN(y)||y<1900||y>CONFIG.currentYear){showError("Please enter a valid birth year.");return false;}
+      var age=CONFIG.currentYear-y;
+      if(age<CONFIG.minAge||age>CONFIG.maxAge){endSurvey("terminated","Age "+age+" outside range");return "terminated";}
+      return true;
+    }
+    case "S2": {
+      if(!val||!Array.isArray(val)||val.length===0){showError("Please select at least one option.");return false;}
+      if(!val.includes("leisure")){endSurvey("terminated","No leisure trip");return "terminated";}
+      return true;
+    }
+    case "S3": {
+      if(!val){showError("Please select an option.");return false;}
+      if(val==="pnts"){endSurvey("terminated","Relationship: prefer not to say");return "terminated";}
+      if(state.quotaCache&&state.quotaCache.relationship&&state.quotaCache.relationship[val]){
+        var qc=state.quotaCache.relationship[val];
+        if(qc.current>=qc.target){endSurvey("quotaFull","Relationship quota full: "+val);return "terminated";}
+      }
+      return true;
+    }
+    case "S4": {
+      if(!val||(Array.isArray(val)&&val.length===0)){showError("Please select at least one option.");return false;}
+      return true;
+    }
+    case "S5": {
+      if(!val){showError("Please select an option.");return false;}
+      if(state.quotaCache&&state.quotaCache.pets&&state.quotaCache.pets[val]){
+        var qc2=state.quotaCache.pets[val];
+        if(qc2.current>=qc2.target){endSurvey("quotaFull","Pet quota full: "+val);return "terminated";}
+      }
+      return true;
+    }
+    case "S6": {
+      if(!val||(Array.isArray(val)&&val.length===0)){showError("Please select at least one option.");return false;}
+      return true;
+    }
+    case "AC": {
+      if(!val){showError("Please select an option.");return false;}
+      if(val!=="tuesday"){endSurvey("terminated","Failed attention check");return "terminated";}
+      return true;
+    }
+    default: return true;
+  }
+}
+
+function validateMain() {
+  var vm=getVisibleMain(), q=vm[state.mainPage]; if(!q) return false;
+  var val=state.answers[q.id];
+  switch(q.type){
+    case "single":
+      if(!val){showError("Please select an option.");return false;}
+      return true;
+    case "multi":
+    case "multi_other":
+      if(!val||!Array.isArray(val)||val.length===0){showError("Please select at least one option.");return false;}
+      return true;
+    case "matrix_multi": {
+      // At least one selection per column that has data, or validate that each col has something
+      // For now: at least one column must have a selection
+      if(!val||typeof val!=="object"||Object.keys(val).length===0){
+        showError("Please make at least one selection in the grid.");return false;
+      }
+      // Check that every column has at least one selection
+      var q3 = vm[state.mainPage];
+      var empty = [];
+      q3.cols.forEach(function(c){
+        if(!val[c.value]||val[c.value].length===0) empty.push(c.label);
+      });
+      if(empty.length>0){
+        showError("Please make a selection for each trip type, or select 'Did not take this type of trip.'");
+        return false;
+      }
+      return true;
+    }
+    case "placeholder": return true; // skip validation for placeholders
+    default: return true;
+  }
+}
+
+// ============================================================
+// TERMINATION & SUBMISSION
+// ============================================================
+function endSurvey(type, reason) {
+  state.endType=type; state.endReason=reason; state.phase="end";
+  render();
+  postToSheet({
+    action: type==="quotaFull"?"quota_full":"terminate",
+    respondent_id:RID, start_time:new Date(state.startTime).toISOString(),
+    duration_seconds:Math.floor((Date.now()-state.startTime)/1000),
+    device_type:DEVICE, reason:reason,
+  });
+}
+
+async function handleSubmit() {
+  state.isSubmitting=true; updateNavButtons();
+  var now=new Date(), dur=Math.floor((Date.now()-state.startTime)/1000);
+  var by=parseInt(state.answers.S1,10), age=CONFIG.currentYear-by;
+
+  // Flatten Q3 matrix into columns
+  var q3data = state.answers.Q3 || {};
+  var q3flat = {};
+  ["solo","partner","friends","family_group","children","pets","group_tour","strangers"].forEach(function(col){
+    q3flat["Q3_"+col] = (q3data[col]||[]).join("; ");
+  });
+
+  var rowData = Object.assign({
+    respondent_id:RID,
+    start_time:new Date(state.startTime).toISOString(),
+    end_time:now.toISOString(),
+    duration_seconds:dur,
+    device_type:DEVICE,
+    status:"complete",
+    S1_birth_year:state.answers.S1||"",
+    S1_age:isNaN(age)?"":age,
+    S2_trip_types:Array.isArray(state.answers.S2)?state.answers.S2.join("; "):"",
+    S3_relationship:state.answers.S3||"",
+    S4_living:Array.isArray(state.answers.S4)?state.answers.S4.join("; "):"",
+    S4_living_other:state.otherTexts.S4||"",
+    S5_pets:state.answers.S5||"",
+    S6_pet_types:Array.isArray(state.answers.S6)?state.answers.S6.join("; "):"",
+    S6_pet_other:state.otherTexts.S6||"",
+    AC_attention:state.answers.AC||"",
+    Q1_trip_count:state.answers.Q1||"",
+    Q2_trip_length:state.answers.Q2||"",
+    Q4_budget:state.answers.Q4||"",
+    Q5_accommodation:Array.isArray(state.answers.Q5)?state.answers.Q5.join("; "):"",
+    Q5_accommodation_other:state.otherTexts.Q5||"",
+  }, q3flat);
+
+  var result = await postToSheet({
+    action:"submit_response",
+    columns:Object.keys(rowData),
+    responses:rowData,
+    quotaValues:{relationship:state.answers.S3, pets:state.answers.S5},
+  });
+  console.log("Submit:",result);
+  state.endType="complete"; state.phase="end"; state.isSubmitting=false;
+  render();
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function handleNext(){
+  clearError();
+  if(state.phase==="screener"){
+    var r=validateScreener(); if(r==="terminated") return; if(!r) return;
+    var vs=getVisibleScreener();
+    if(state.screenerPage>=vs.length-1){ state.phase="main"; state.mainPage=0; }
+    else { state.screenerPage++; }
+    window.scrollTo({top:0,behavior:"smooth"}); render(); return;
+  }
+  if(state.phase==="main"){
+    var r2=validateMain(); if(!r2) return;
+    var vm=getVisibleMain();
+    if(state.mainPage>=vm.length-1){ handleSubmit(); }
+    else { state.mainPage++; window.scrollTo({top:0,behavior:"smooth"}); render(); }
+  }
+}
+
+function handleBack(){
+  clearError();
+  if(state.phase==="screener"){
+    if(state.screenerPage>0){ state.screenerPage--; render(); }
+    return;
+  }
+  if(state.phase==="main"){
+    if(state.mainPage>0){ state.mainPage--; }
+    else { state.phase="screener"; state.screenerPage=getVisibleScreener().length-1; }
+    render();
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.getElementById("btn-next").addEventListener("click", handleNext);
+document.getElementById("btn-back").addEventListener("click", handleBack);
+
+fetch(CONFIG.apiUrl+"?action=check_quotas")
+  .then(function(r){return r.json();})
+  .then(function(d){state.quotaCache=d.quotas||{};})
+  .catch(function(){state.quotaCache={};});
+
+render();
+</script>
+</body>
+</html>

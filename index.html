@@ -104,7 +104,7 @@
   <div class="meta-bar">
     <span id="meta-rid">ID: ---</span>
     <span id="meta-device">---</span>
-    <span>v1.1</span>
+    <span>v1.2</span>
   </div>
 </div>
 
@@ -121,6 +121,9 @@ var CONFIG = {
   apiUrl: "https://script.google.com/macros/s/AKfycbwVW6Z7vnxYenzMKPm1ukTg9KfjUswPnp9M1JnQAvdEeWStUbSFkc7NiRt-rUl3zbHa/exec",
   minAge: 21, maxAge: 45, currentYear: 2026,
 };
+
+// All possible Q3b trip keys - must match Apps Script COLUMN_SCHEMA
+var ALL_TRIP_KEYS = ["beach","city","mountains","countryside","international","roadtrip","resort","cruise","other"];
 
 // ============================================================
 // STATE
@@ -151,6 +154,7 @@ function formatTime(t) {
   return m > 0 ? m+"m "+String(s).padStart(2,"0")+"s" : s+"s";
 }
 function escHtml(str) { var d=document.createElement("div"); d.textContent=str||""; return d.innerHTML; }
+function arrJoin(val) { return Array.isArray(val) ? val.join("; ") : ""; }
 
 var DEVICE = getDeviceType();
 var RID = getUrlParam("rid") || getUrlParam("RID") || ("test_"+Math.random().toString(36).slice(2,8));
@@ -163,7 +167,7 @@ async function postToSheet(data) {
 }
 
 // ============================================================
-// Q3 TRIP TYPE DEFINITIONS (used for dynamic follow-ups)
+// Q3 DEFINITIONS
 // ============================================================
 var TRIP_TYPES = [
   { value:"beach", label:"Beach / coastal" },
@@ -188,7 +192,7 @@ var COMPANION_OPTIONS = [
 ];
 
 // ============================================================
-// SCREENER QUESTIONS
+// SCREENER
 // ============================================================
 var SCREENER = [
   { id:"S1", type:"text_number", section:"Screener", label:"S1", text:"What year were you born?", placeholder:"e.g. 1994" },
@@ -241,12 +245,11 @@ var SCREENER = [
 ];
 
 // ============================================================
-// MAIN QUESTIONS (built dynamically because Q3b depends on Q3a)
+// MAIN QUESTIONS (dynamic based on Q3a)
 // ============================================================
 function buildMainQuestions() {
   var questions = [];
 
-  // Q1
   questions.push({ id:"Q1", type:"single", section:"Travel Behavior", label:"Q1",
     text:"Approximately how many leisure trips have you taken in the past 2 years?",
     options:[
@@ -255,7 +258,6 @@ function buildMainQuestions() {
       {value:"10+",label:"10 or more trips"},
     ]});
 
-  // Q2
   questions.push({ id:"Q2", type:"single", section:"Travel Behavior", label:"Q2",
     text:"How long is your typical leisure trip?",
     options:[
@@ -264,15 +266,15 @@ function buildMainQuestions() {
       {value:"15+",label:"15+ nights"},
     ]});
 
-  // Q3a - Trip types
   questions.push({ id:"Q3a", type:"multi_other", section:"Travel Behavior", label:"Q3a",
     text:"What type(s) of leisure trip have you taken in the past 2 years? Please select all that apply.",
-    options: TRIP_TYPES.slice(), // copy
+    options: TRIP_TYPES.slice(),
     otherLabel:"Other"
   });
 
-  // Q3b - Dynamic companion follow-ups for each selected trip type
+  // Q3b follow-ups for each selected trip type
   var selectedTrips = state.answers.Q3a || [];
+
   TRIP_TYPES.forEach(function(trip) {
     if (selectedTrips.includes(trip.value)) {
       questions.push({
@@ -288,22 +290,20 @@ function buildMainQuestions() {
     }
   });
 
-  // If "other" trip type selected, show companion question for that too
   if (selectedTrips.includes("other")) {
-    var otherTripText = state.otherTexts.Q3a ? ('"' + state.otherTexts.Q3a + '"') : "Other";
+    var otherText = state.otherTexts.Q3a ? ('"' + state.otherTexts.Q3a + '"') : "Other";
     questions.push({
       id: "Q3b_other",
       type: "multi_other",
       section: "Travel Behavior",
       label: "Q3b",
-      tripTag: otherTripText + " trip",
-      text: "For your " + otherTripText + " trip(s), who did you travel with? Please select all that apply.",
+      tripTag: otherText + " trip",
+      text: "For your " + otherText + " trip(s), who did you travel with? Please select all that apply.",
       options: COMPANION_OPTIONS.slice(),
       otherLabel: "Other"
     });
   }
 
-  // Q4
   questions.push({ id:"Q4", type:"single", section:"Travel Behavior", label:"Q4",
     text:"What is your typical per-person budget for a leisure trip, including accommodation, transportation, food, and activities?",
     options:[
@@ -313,7 +313,6 @@ function buildMainQuestions() {
       {value:"unsure",label:"Not sure / prefer not to say"},
     ]});
 
-  // Q5
   questions.push({ id:"Q5", type:"multi_other", section:"Travel Behavior", label:"Q5",
     text:"What types of accommodation do you typically use when traveling? Select all that apply.",
     options:[
@@ -327,7 +326,7 @@ function buildMainQuestions() {
       {value:"exchange",label:"Home exchange"},
     ], otherLabel:"Other" });
 
-  // Sections 3-7 placeholders
+  // Placeholders for remaining sections
   questions.push({ id:"PH_S3", type:"placeholder", section:"Most Recent Trip", label:"Section 3",
     text:"Q6-Q14A: Most recent trip details, conflict, connection, open-end." });
   questions.push({ id:"PH_S4", type:"placeholder", section:"Travel Motivations", label:"Section 4",
@@ -363,7 +362,7 @@ setInterval(function(){
 },1000);
 
 // ============================================================
-// RENDER ENGINE
+// RENDER
 // ============================================================
 function render() {
   document.getElementById("meta-rid").textContent = "ID: "+RID;
@@ -489,7 +488,7 @@ function bindOptionClicks(q) {
 }
 
 // ============================================================
-// PROGRESS
+// PROGRESS & NAV
 // ============================================================
 function updateProgress(list, idx, q) {
   var vs = getVisibleScreener(), vm = getVisibleMain();
@@ -629,45 +628,49 @@ async function handleSubmit() {
   var now=new Date(), dur=Math.floor((Date.now()-state.startTime)/1000);
   var by=parseInt(state.answers.S1,10), age=CONFIG.currentYear-by;
 
+  // --------------------------------------------------------
+  // FIXED COLUMN SCHEMA
+  // Always send every column. Empty string if not answered.
+  // Must match COLUMN_SCHEMA in Apps Script exactly.
+  // --------------------------------------------------------
   var rowData = {
+    // Metadata
     respondent_id: RID,
     start_time: new Date(state.startTime).toISOString(),
     end_time: now.toISOString(),
     duration_seconds: dur,
     device_type: DEVICE,
     status: "complete",
+    terminate_reason: "",
     // Screener
-    S1_birth_year: state.answers.S1||"",
-    S1_age: isNaN(age)?"":age,
-    S2_trip_types: Array.isArray(state.answers.S2)?state.answers.S2.join("; "):"",
-    S3_relationship: state.answers.S3||"",
-    S4_living: Array.isArray(state.answers.S4)?state.answers.S4.join("; "):"",
-    S4_living_other: state.otherTexts.S4||"",
-    S5_pets: state.answers.S5||"",
-    S6_pet_types: Array.isArray(state.answers.S6)?state.answers.S6.join("; "):"",
-    S6_pet_other: state.otherTexts.S6||"",
-    AC_attention: state.answers.AC||"",
+    S1_birth_year: state.answers.S1 || "",
+    S1_age: isNaN(age) ? "" : age,
+    S2_trip_types: arrJoin(state.answers.S2),
+    S3_relationship: state.answers.S3 || "",
+    S4_living: arrJoin(state.answers.S4),
+    S4_living_other: state.otherTexts.S4 || "",
+    S5_pets: state.answers.S5 || "",
+    S6_pet_types: arrJoin(state.answers.S6),
+    S6_pet_other: state.otherTexts.S6 || "",
+    AC_attention: state.answers.AC || "",
     // Section 2
-    Q1_trip_count: state.answers.Q1||"",
-    Q2_trip_length: state.answers.Q2||"",
-    Q3a_trip_types: Array.isArray(state.answers.Q3a)?state.answers.Q3a.join("; "):"",
-    Q3a_trip_other: state.otherTexts.Q3a||"",
-    Q4_budget: state.answers.Q4||"",
-    Q5_accommodation: Array.isArray(state.answers.Q5)?state.answers.Q5.join("; "):"",
-    Q5_accommodation_other: state.otherTexts.Q5||"",
+    Q1_trip_count: state.answers.Q1 || "",
+    Q2_trip_length: state.answers.Q2 || "",
+    Q3a_trip_types: arrJoin(state.answers.Q3a),
+    Q3a_trip_other: state.otherTexts.Q3a || "",
   };
 
-  // Add Q3b companion data for each selected trip type
-  var allTripKeys = TRIP_TYPES.map(function(t){ return t.value; }).concat(["other"]);
-  allTripKeys.forEach(function(tripKey) {
-    var qid = "Q3b_" + tripKey;
-    if (state.answers[qid] && Array.isArray(state.answers[qid]) && state.answers[qid].length > 0) {
-      rowData["Q3b_" + tripKey + "_companions"] = state.answers[qid].join("; ");
-      if (state.otherTexts[qid]) {
-        rowData["Q3b_" + tripKey + "_companions_other"] = state.otherTexts[qid];
-      }
-    }
+  // Q3b companion columns - always include ALL trip types, empty if not selected
+  ALL_TRIP_KEYS.forEach(function(key) {
+    var qid = "Q3b_" + key;
+    rowData["Q3b_" + key + "_companions"] = arrJoin(state.answers[qid]);
+    rowData["Q3b_" + key + "_companions_other"] = state.otherTexts[qid] || "";
   });
+
+  // Rest of Section 2
+  rowData["Q4_budget"] = state.answers.Q4 || "";
+  rowData["Q5_accommodation"] = arrJoin(state.answers.Q5);
+  rowData["Q5_accommodation_other"] = state.otherTexts.Q5 || "";
 
   var result = await postToSheet({
     action: "submit_response",

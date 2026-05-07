@@ -5,728 +5,489 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TrustedHousesitters Travel Survey</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: 'Source Sans 3', 'Source Sans Pro', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: #fafafa; color: #1a1a1a; min-height: 100vh;
-  }
-  .outer { max-width: 720px; margin: 0 auto; padding: 24px 20px; }
-  .logo { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #2c6e49; margin-bottom: 4px; }
-  .progress-wrap { margin-bottom: 24px; }
-  .progress-track { height: 4px; background: #e0e0e0; border-radius: 2px; overflow: hidden; }
-  .progress-fill { height: 100%; background: #2c6e49; border-radius: 2px; transition: width 0.4s ease; }
-  .progress-meta { font-size: 12px; color: #888; margin-top: 6px; display: flex; justify-content: space-between; }
-  .card { background: #fff; border-radius: 10px; padding: 32px 28px; box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04); margin-bottom: 20px; }
-  .sec-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #2c6e49; margin-bottom: 8px; }
-  .q-text { font-size: 16px; font-weight: 500; line-height: 1.5; color: #1a1a1a; margin-bottom: 20px; }
-  .q-sub { font-size: 13px; color: #888; margin-bottom: 16px; margin-top: -12px; }
-  .opt-group { display: flex; flex-direction: column; gap: 8px; }
-  .opt {
-    display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px;
-    border: 1.5px solid #ddd; background: #fff; cursor: pointer; transition: all 0.15s ease;
-    font-size: 15px; line-height: 1.4; user-select: none;
-  }
-  .opt:hover { border-color: #bbb; }
-  .opt.selected { border-color: #2c6e49; background: #f0f7f3; }
-  .radio-circle {
-    width: 18px; height: 18px; border-radius: 50%; border: 2px solid #ccc;
-    background: #fff; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s;
-  }
-  .opt.selected .radio-circle { border-color: #2c6e49; background: #2c6e49; }
-  .radio-dot { width: 6px; height: 6px; border-radius: 50%; background: #fff; display: none; }
-  .opt.selected .radio-dot { display: block; }
-  .chk-box {
-    width: 18px; height: 18px; border-radius: 4px; border: 2px solid #ccc;
-    background: #fff; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-    font-size: 11px; color: #fff; font-weight: 700; transition: all 0.15s;
-  }
-  .opt.selected .chk-box { border-color: #2c6e49; background: #2c6e49; }
-  .chk-mark { display: none; }
-  .opt.selected .chk-mark { display: inline; }
-  .other-row {
-    display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px;
-    border: 1.5px solid #ddd; background: #fff; font-size: 15px;
-  }
-  .other-row.selected { border-color: #2c6e49; background: #f0f7f3; }
-  .other-row .chk-box { cursor: pointer; }
-  .other-row.selected .chk-box { border-color: #2c6e49; background: #2c6e49; }
-  .other-row.selected .chk-mark { display: inline; }
-  .other-input { flex: 1; border: none; outline: none; font-size: 15px; font-family: inherit; background: transparent; }
-  .text-input {
-    width: 100%; padding: 12px 14px; font-size: 15px; border: 1.5px solid #ddd;
-    border-radius: 8px; outline: none; font-family: inherit;
-  }
-  .text-input:focus { border-color: #2c6e49; }
-  .nav-row { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; gap: 12px; }
-  .btn-pri {
-    padding: 12px 32px; font-size: 15px; font-weight: 600; color: #fff; background: #2c6e49;
-    border: none; border-radius: 8px; cursor: pointer; transition: background 0.15s;
-  }
-  .btn-pri:hover { background: #245a3a; }
-  .btn-pri:disabled { opacity: 0.4; cursor: not-allowed; }
-  .btn-sec {
-    padding: 12px 24px; font-size: 15px; font-weight: 500; color: #555; background: transparent;
-    border: 1.5px solid #ddd; border-radius: 8px; cursor: pointer;
-  }
-  .btn-sec:hover { border-color: #bbb; }
-  .btn-sec:disabled { opacity: 0.4; cursor: not-allowed; }
-  .meta-bar {
-    display: flex; justify-content: space-between; font-size: 11px; color: #aaa;
-    padding: 8px 0; border-top: 1px solid #eee; margin-top: 32px;
-  }
-  .err { color: #c0392b; font-size: 13px; margin-top: 12px; padding: 8px 12px; background: #fdf0ef; border-radius: 6px; }
-  .hidden { display: none; }
-  .end-screen { text-align: center; padding: 60px 20px; }
-  .end-title { font-size: 22px; font-weight: 600; margin-bottom: 12px; }
-  .end-msg { font-size: 15px; color: #666; line-height: 1.6; }
-  .placeholder { padding: 20px; background: #f8f8f8; border-radius: 8px; font-size: 13px; color: #888; }
-  .trip-tag { display: inline-block; padding: 3px 10px; background: #e8f5ee; color: #2c6e49; border-radius: 12px; font-size: 12px; font-weight: 600; margin-bottom: 8px; }
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Source Sans 3','Source Sans Pro',-apple-system,sans-serif;background:#fafafa;color:#1a1a1a;min-height:100vh}
+.outer{max-width:720px;margin:0 auto;padding:24px 20px}
+.logo{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#2c6e49;margin-bottom:4px}
+.progress-wrap{margin-bottom:24px}
+.progress-track{height:4px;background:#e0e0e0;border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:#2c6e49;border-radius:2px;transition:width .4s ease}
+.progress-meta{font-size:12px;color:#888;margin-top:6px;display:flex;justify-content:space-between}
+.card{background:#fff;border-radius:10px;padding:32px 28px;box-shadow:0 1px 3px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.04);margin-bottom:20px}
+.sec-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#2c6e49;margin-bottom:8px}
+.q-text{font-size:16px;font-weight:500;line-height:1.5;color:#1a1a1a;margin-bottom:20px}
+.q-sub{font-size:13px;color:#888;margin-bottom:16px;margin-top:-12px}
+.intro-text{font-size:15px;line-height:1.6;color:#444;padding:16px 0}
+.opt-group{display:flex;flex-direction:column;gap:8px}
+.opt{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;border:1.5px solid #ddd;background:#fff;cursor:pointer;transition:all .15s;font-size:15px;line-height:1.4;user-select:none}
+.opt:hover{border-color:#bbb}.opt.selected{border-color:#2c6e49;background:#f0f7f3}
+.rc{width:18px;height:18px;border-radius:50%;border:2px solid #ccc;background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.opt.selected .rc{border-color:#2c6e49;background:#2c6e49}
+.rd{width:6px;height:6px;border-radius:50%;background:#fff;display:none}.opt.selected .rd{display:block}
+.cb{width:18px;height:18px;border-radius:4px;border:2px solid #ccc;background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:700;transition:all .15s}
+.opt.selected .cb{border-color:#2c6e49;background:#2c6e49}
+.cm{display:none}.opt.selected .cm{display:inline}
+.other-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;border:1.5px solid #ddd;background:#fff;font-size:15px}
+.other-row.selected{border-color:#2c6e49;background:#f0f7f3}
+.other-row.selected .cb{border-color:#2c6e49;background:#2c6e49}
+.other-row.selected .cm{display:inline}
+.other-input{flex:1;border:none;outline:none;font-size:15px;font-family:inherit;background:transparent}
+.text-input{width:100%;padding:12px 14px;font-size:15px;border:1.5px solid #ddd;border-radius:8px;outline:none;font-family:inherit}
+.text-input:focus{border-color:#2c6e49}
+.textarea{width:100%;padding:12px 14px;font-size:15px;border:1.5px solid #ddd;border-radius:8px;outline:none;font-family:inherit;min-height:100px;resize:vertical}
+.textarea:focus{border-color:#2c6e49}
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:24px;gap:12px}
+.btn-pri{padding:12px 32px;font-size:15px;font-weight:600;color:#fff;background:#2c6e49;border:none;border-radius:8px;cursor:pointer}
+.btn-pri:hover{background:#245a3a}.btn-pri:disabled{opacity:.4;cursor:not-allowed}
+.btn-sec{padding:12px 24px;font-size:15px;font-weight:500;color:#555;background:transparent;border:1.5px solid #ddd;border-radius:8px;cursor:pointer}
+.btn-sec:disabled{opacity:.4;cursor:not-allowed}
+.meta-bar{display:flex;justify-content:space-between;font-size:11px;color:#aaa;padding:8px 0;border-top:1px solid #eee;margin-top:32px}
+.err{color:#c0392b;font-size:13px;margin-top:12px;padding:8px 12px;background:#fdf0ef;border-radius:6px}
+.hidden{display:none}
+.end-screen{text-align:center;padding:60px 20px}
+.end-title{font-size:22px;font-weight:600;margin-bottom:12px}
+.end-msg{font-size:15px;color:#666;line-height:1.6}
+.trip-tag{display:inline-block;padding:3px 10px;background:#e8f5ee;color:#2c6e49;border-radius:12px;font-size:12px;font-weight:600;margin-bottom:8px}
+.mx-wrap{overflow-x:auto;margin:0 -28px;padding:0 28px}
+.mx-table{border-collapse:collapse;width:100%;min-width:500px;font-size:13px}
+.mx-table th{padding:10px 6px;text-align:center;font-weight:600;font-size:11px;border-bottom:2px solid #e0e0e0;background:#fafafa;color:#555;line-height:1.3;vertical-align:bottom;min-width:60px}
+.mx-table th:first-child{text-align:left;min-width:180px;position:sticky;left:0;z-index:2;background:#fafafa}
+.mx-table td{padding:8px 6px;text-align:center;border-bottom:1px solid #eee}
+.mx-table td:first-child{text-align:left;font-size:14px;color:#333;position:sticky;left:0;background:#fff;z-index:1;padding-right:12px}
+.mx-table tr:hover td{background:#f8faf9}
+.mx-radio{width:18px;height:18px;border-radius:50%;border:2px solid #ccc;background:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s}
+.mx-radio.checked{border-color:#2c6e49;background:#2c6e49}
+.mx-radio:hover{border-color:#999}
+.mx-dot{width:6px;height:6px;border-radius:50%;background:#fff;display:none}
+.mx-radio.checked .mx-dot{display:block}
 </style>
 </head>
 <body>
-
 <div class="outer" id="app">
   <div id="header-area" style="margin-bottom:32px">
     <div class="logo">TrustedHousesitters</div>
     <div class="progress-wrap">
-      <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
-      <div class="progress-meta">
-        <span id="progress-label"></span>
-        <span id="timer-display">Time: 0s</span>
-      </div>
+      <div class="progress-track"><div class="progress-fill" id="pf" style="width:0%"></div></div>
+      <div class="progress-meta"><span id="pl"></span><span id="tm">Time: 0s</span></div>
     </div>
   </div>
-  <div class="card" id="question-card"></div>
-  <div class="nav-row">
-    <button class="btn-sec" id="btn-back" disabled>Back</button>
-    <button class="btn-pri" id="btn-next">Next</button>
-  </div>
-  <div class="meta-bar">
-    <span id="meta-rid">ID: ---</span>
-    <span id="meta-device">---</span>
-    <span>v1.2</span>
-  </div>
+  <div class="card" id="qc"></div>
+  <div class="nav-row"><button class="btn-sec" id="bb" disabled>Back</button><button class="btn-pri" id="bn">Next</button></div>
+  <div class="meta-bar"><span id="mr">ID: ---</span><span id="md">---</span><span>v2.0</span></div>
 </div>
-
 <script>
-// ============================================================
-// CONFIG
-// ============================================================
-var CONFIG = {
-  redirects: {
-    complete: "https://www.example.com/complete?rid={RID}",
-    terminate: "https://www.example.com/terminate?rid={RID}",
-    quotaFull: "https://www.example.com/quotafull?rid={RID}",
-  },
-  apiUrl: "https://script.google.com/macros/s/AKfycbwVW6Z7vnxYenzMKPm1ukTg9KfjUswPnp9M1JnQAvdEeWStUbSFkc7NiRt-rUl3zbHa/exec",
-  minAge: 21, maxAge: 45, currentYear: 2026,
-};
+var C={apiUrl:"https://script.google.com/macros/s/AKfycbwVW6Z7vnxYenzMKPm1ukTg9KfjUswPnp9M1JnQAvdEeWStUbSFkc7NiRt-rUl3zbHa/exec",minAge:21,maxAge:45,yr:2026,
+redirects:{complete:"https://www.example.com/complete?rid={RID}",terminate:"https://www.example.com/terminate?rid={RID}",quotaFull:"https://www.example.com/quotafull?rid={RID}"}};
 
-// All possible Q3b trip keys - must match Apps Script COLUMN_SCHEMA
-var ALL_TRIP_KEYS = ["beach","city","mountains","countryside","international","roadtrip","resort","cruise","other"];
-
-// ============================================================
-// STATE
-// ============================================================
-var state = {
-  answers: {}, otherTexts: {},
-  phase: "screener",
-  screenerPage: 0, mainPage: 0,
-  startTime: Date.now(), elapsed: 0,
-  quotaCache: null, isSubmitting: false,
-  endType: "", endReason: "",
-};
+var ALL_TRIP_KEYS=["beach","city","mountains","countryside","international","roadtrip","resort","cruise","other"];
+var st={a:{},ot:{},phase:"screener",sp:0,mp:0,t0:Date.now(),el:0,qc:null,sub:false,et:"",er:""};
+function gd(){var u=navigator.userAgent;if(/tablet|ipad|playbook|silk/i.test(u))return"tablet";if(/mobile|iphone|ipod|android/i.test(u))return"mobile";return"desktop";}
+function gp(p){try{return new URLSearchParams(window.location.search).get(p)||"";}catch(e){return"";}}
+function ft(t){var m=Math.floor(t/60),s=t%60;return m>0?m+"m "+String(s).padStart(2,"0")+"s":s+"s";}
+function esc(s){var d=document.createElement("div");d.textContent=s||"";return d.innerHTML;}
+function aj(v){return Array.isArray(v)?v.join("; "):""}
+var DV=gd(),RID=gp("rid")||gp("RID")||("test_"+Math.random().toString(36).slice(2,8));
+function hashS(s){var h=0;for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return Math.abs(h);}
+function shuf(arr,seed){var a=arr.slice(),s=seed||1;for(var i=a.length-1;i>0;i--){s=(s*16807)%2147483647;var j=s%(i+1);var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+var SEED=hashS(RID)||12345;
+async function post(data){try{var r=await fetch(C.apiUrl,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify(data)});return await r.json();}catch(e){console.error(e);return{error:e.toString()};}}
 
 // ============================================================
-// UTILITIES
+// TRIP TYPES & COMPANIONS
 // ============================================================
-function getDeviceType() {
-  var ua = navigator.userAgent;
-  if (/tablet|ipad|playbook|silk/i.test(ua)) return "tablet";
-  if (/mobile|iphone|ipod|android|blackberry|opera mini|iemobile/i.test(ua)) return "mobile";
-  return "desktop";
-}
-function getUrlParam(p) {
-  try { return new URLSearchParams(window.location.search).get(p) || ""; } catch(e) { return ""; }
-}
-function formatTime(t) {
-  var m = Math.floor(t/60), s = t%60;
-  return m > 0 ? m+"m "+String(s).padStart(2,"0")+"s" : s+"s";
-}
-function escHtml(str) { var d=document.createElement("div"); d.textContent=str||""; return d.innerHTML; }
-function arrJoin(val) { return Array.isArray(val) ? val.join("; ") : ""; }
-
-var DEVICE = getDeviceType();
-var RID = getUrlParam("rid") || getUrlParam("RID") || ("test_"+Math.random().toString(36).slice(2,8));
-
-async function postToSheet(data) {
-  try {
-    var r = await fetch(CONFIG.apiUrl, { method:"POST", headers:{"Content-Type":"text/plain"}, body:JSON.stringify(data) });
-    return await r.json();
-  } catch(e) { console.error("Post failed:",e); return {error:e.toString()}; }
-}
+var TRIPS=[{v:"beach",l:"Beach / coastal"},{v:"city",l:"City / urban"},{v:"mountains",l:"Mountains / nature / outdoors"},{v:"countryside",l:"Countryside / rural"},{v:"international",l:"International destination"},{v:"roadtrip",l:"Road trip / driving destination"},{v:"resort",l:"Resort / all-inclusive"},{v:"cruise",l:"Cruise"}];
+var COMPS=[{v:"solo",l:"Solo"},{v:"partner",l:"Romantic partner / spouse"},{v:"friends",l:"Friends"},{v:"family",l:"Family"},{v:"children",l:"Child / children"},{v:"pets",l:"Pet(s)"},{v:"group_tour",l:"Organized group tour"},{v:"strangers",l:"People I did not know well before the trip"}];
 
 // ============================================================
-// Q3 DEFINITIONS
+// CEP ITEMS
 // ============================================================
-var TRIP_TYPES = [
-  { value:"beach", label:"Beach / coastal" },
-  { value:"city", label:"City / urban" },
-  { value:"mountains", label:"Mountains / nature / outdoors" },
-  { value:"countryside", label:"Countryside / rural" },
-  { value:"international", label:"International destination" },
-  { value:"roadtrip", label:"Road trip / driving destination" },
-  { value:"resort", label:"Resort / all-inclusive" },
-  { value:"cruise", label:"Cruise" },
-];
-
-var COMPANION_OPTIONS = [
-  { value:"solo", label:"Solo" },
-  { value:"partner", label:"Romantic partner / spouse" },
-  { value:"friends", label:"Friends" },
-  { value:"family", label:"Family" },
-  { value:"children", label:"Child / children" },
-  { value:"pets", label:"Pet(s)" },
-  { value:"group_tour", label:"Organized group tour" },
-  { value:"strangers", label:"People I did not know well before the trip" },
+var CEP=[
+{k:"1",p:"Choosing a trip that makes sense for where I am in life right now",e:"The trip felt like the right trip for where I am in life right now"},
+{k:"2",p:"Choosing a trip that works for my current living situation",e:"The trip did not disrupt my current living situation"},
+{k:"3",p:"Choosing a destination because someone I was traveling with wanted to go",e:"I chose the destination because someone I was traveling with wanted to go"},
+{k:"4",p:"Travel companions that are in similar life stages",e:"Travelled with companions who were in similar life stages"},
+{k:"5",p:"Sharing the experience with someone I care about",e:"I shared the experience with someone I care about"},
+{k:"6",p:"Deepening a relationship with someone I travel with",e:"The trip deepened a relationship with someone I traveled with"},
+{k:"7",p:"Testing how the dynamic with my travel companion works during a trip",e:"The trip showed me how well the dynamic with my travel companion works"},
+{k:"8",p:"Finding a sense of community while away from home",e:"I found a sense of community while away from home"},
+{k:"9",p:"Making a meaningful connection with someone I do not know well before the trip",e:"I made a meaningful connection with someone I did not know well before the trip"},
+{k:"10",p:"Traveling as a way to reconnect with myself",e:"The trip helped me reconnect with myself"},
+{k:"11",p:"Exploring a new city, lifestyle, or way of living I might want to commit to",e:"Explored a new city, lifestyle, or way of living I could see myself committing to"},
+{k:"12",p:"Learning something new about a relationship by traveling together",e:"The trip changed how I see a relationship in my life"},
+{k:"13",p:"Making a connection through travel that could last beyond the trip",e:"I made a friendship or connection through travel that lasted beyond the trip"},
+{k:"14",p:"Using travel to help make or move toward a major life decision",e:"A trip helped me make or move toward a major life decision"},
+{k:"15",p:"Being able to bring or accommodate my pet",e:"I was able to bring or accommodate my pet"},
+{k:"16",p:"Knowing my pet will be cared for while I am away",e:"My pet was cared for in a way I felt good about"},
+{k:"17",p:"Not having to cancel, shorten, or skip a trip because of my pet",e:"I canceled, shortened, or skipped part of a trip because of my pet"},
+{k:"18",p:"Not feeling guilty about leaving my pet when I travel",e:"I felt guilty about leaving my pet behind"},
+{k:"19",p:"Choosing a destination or accommodation based on whether it works for my pet",e:"I chose a different destination or accommodation than I wanted because of my pet"},
+{k:"20",p:"Having trusted pet care that allows me to adjust or extend my travel plans",e:"I had trusted pet care that made me more flexible to travel"}
 ];
 
 // ============================================================
 // SCREENER
 // ============================================================
-var SCREENER = [
-  { id:"S1", type:"text_number", section:"Screener", label:"S1", text:"What year were you born?", placeholder:"e.g. 1994" },
-  { id:"S2", type:"multi", section:"Screener", label:"S2",
-    text:"Have you taken at least one leisure trip in the past 12 months? (A leisure trip means a vacation, weekend getaway, or extended personal trip that included at least one overnight stay.)",
-    options:[
-      {value:"leisure",label:"I've taken a leisure trip."},
-      {value:"work",label:"I've taken a work trip."},
-      {value:"canceled",label:"I had to cancel a trip."},
-      {value:"none",label:"I didn't plan any trips."},
-    ]},
-  { id:"S3", type:"single", section:"Screener", label:"S3",
-    text:"Which of the following best describes your current relationship status?",
-    options:[
-      {value:"single",label:"Single, not dating anyone"},
-      {value:"dating",label:"Dating, but not in a committed relationship"},
-      {value:"inRelationship",label:"In a relationship"},
-      {value:"married",label:"Married"},
-      {value:"pnts",label:"Prefer not to say"},
-    ]},
-  { id:"S4", type:"multi_other", section:"Screener", label:"S4",
-    text:"Which best describes your current living situation?",
-    options:[
-      {value:"alone",label:"I live alone without roommate"},
-      {value:"partner",label:"I live with a romantic partner or spouse"},
-      {value:"roommates",label:"I live with roommate(s)"},
-      {value:"children",label:"I live with children"},
-      {value:"family",label:"I live with parents or other family members"},
-      {value:"split",label:"I split time across multiple households"},
-    ], otherLabel:"Other" },
-  { id:"S5", type:"single", section:"Screener", label:"S5",
-    text:"Do you currently own any pets that live with you?",
-    options:[{value:"yes",label:"Yes"},{value:"no",label:"No"}] },
-  { id:"S6", type:"multi_other", section:"Screener", label:"S6",
-    text:"What type of pet or pets do you have?",
-    showIf:function(){ return state.answers.S5==="yes"; },
-    options:[
-      {value:"dog",label:"Dog(s)"},{value:"cat",label:"Cat(s)"},{value:"bird",label:"Bird(s)"},
-      {value:"fish",label:"Fish"},{value:"reptile",label:"Reptile(s)"},
-      {value:"small_mammal",label:"Small mammal(s), such as rabbit, hamster, or guinea pig"},
-    ], otherLabel:"Other" },
-  { id:"AC", type:"single", section:"Screener", label:"Attention Check",
-    text:"If today is Monday and yesterday was Sunday, what day is tomorrow?",
-    options:[
-      {value:"monday",label:"Monday"},{value:"tuesday",label:"Tuesday"},
-      {value:"wednesday",label:"Wednesday"},{value:"thursday",label:"Thursday"},
-      {value:"friday",label:"Friday"},{value:"saturday",label:"Saturday"},
-      {value:"sunday",label:"Sunday"},
-    ]},
+var SCR=[
+{id:"S1",type:"num",sec:"Screener",lab:"S1",text:"What year were you born?",ph:"e.g. 1994"},
+{id:"S2",type:"multi",sec:"Screener",lab:"S2",text:"Have you taken at least one leisure trip in the past 12 months? (A leisure trip means a vacation, weekend getaway, or extended personal trip that included at least one overnight stay.)",
+opts:[{v:"leisure",l:"I've taken a leisure trip."},{v:"work",l:"I've taken a work trip."},{v:"canceled",l:"I had to cancel a trip."},{v:"none",l:"I didn't plan any trips."}]},
+{id:"S3",type:"single",sec:"Screener",lab:"S3",text:"Which of the following best describes your current relationship status?",
+opts:[{v:"single",l:"Single, not dating anyone"},{v:"dating",l:"Dating, but not in a committed relationship"},{v:"inRelationship",l:"In a relationship"},{v:"married",l:"Married"},{v:"pnts",l:"Prefer not to say"}]},
+{id:"S4",type:"mo",sec:"Screener",lab:"S4",text:"Which best describes your current living situation?",
+opts:[{v:"alone",l:"I live alone without roommate"},{v:"partner",l:"I live with a romantic partner or spouse"},{v:"roommates",l:"I live with roommate(s)"},{v:"children",l:"I live with children"},{v:"family",l:"I live with parents or other family members"},{v:"split",l:"I split time across multiple households"}],ol:"Other"},
+{id:"S5",type:"single",sec:"Screener",lab:"S5",text:"Do you currently own any pets that live with you?",opts:[{v:"yes",l:"Yes"},{v:"no",l:"No"}]},
+{id:"S6",type:"mo",sec:"Screener",lab:"S6",text:"What type of pet or pets do you have?",si:function(){return st.a.S5==="yes";},
+opts:[{v:"dog",l:"Dog(s)"},{v:"cat",l:"Cat(s)"},{v:"bird",l:"Bird(s)"},{v:"fish",l:"Fish"},{v:"reptile",l:"Reptile(s)"},{v:"small_mammal",l:"Small mammal(s), such as rabbit, hamster, or guinea pig"}],ol:"Other"},
+{id:"AC",type:"single",sec:"Screener",lab:"Attention Check",text:"If today is Monday and yesterday was Sunday, what day is tomorrow?",
+opts:[{v:"monday",l:"Monday"},{v:"tuesday",l:"Tuesday"},{v:"wednesday",l:"Wednesday"},{v:"thursday",l:"Thursday"},{v:"friday",l:"Friday"},{v:"saturday",l:"Saturday"},{v:"sunday",l:"Sunday"}]}
 ];
 
 // ============================================================
-// MAIN QUESTIONS (dynamic based on Q3a)
+// MAIN QUESTIONS (dynamic builder)
 // ============================================================
-function buildMainQuestions() {
-  var questions = [];
+function buildMain(){
+var q=[];
+// Section 2
+q.push({id:"Q1",type:"single",sec:"Travel Behavior",lab:"Q1",text:"Approximately how many leisure trips have you taken in the past 2 years?",
+opts:[{v:"1-2",l:"1-2 trips"},{v:"3-4",l:"3-4 trips"},{v:"5-6",l:"5-6 trips"},{v:"7-9",l:"7-9 trips"},{v:"10+",l:"10 or more trips"}]});
+q.push({id:"Q2",type:"single",sec:"Travel Behavior",lab:"Q2",text:"How long is your typical leisure trip?",
+opts:[{v:"1-2",l:"1-2 nights"},{v:"3-4",l:"3-4 nights"},{v:"5-7",l:"5-7 nights"},{v:"8-14",l:"8-14 nights"},{v:"15+",l:"15+ nights"}]});
+q.push({id:"Q3a",type:"mo",sec:"Travel Behavior",lab:"Q3a",text:"What type(s) of leisure trip have you taken in the past 2 years? Please select all that apply.",opts:TRIPS.slice(),ol:"Other"});
+var sel=st.a.Q3a||[];
+TRIPS.forEach(function(t){if(sel.includes(t.v))q.push({id:"Q3b_"+t.v,type:"mo",sec:"Travel Behavior",lab:"Q3b",tag:t.l,text:"For your "+t.l+" trip(s), who did you travel with? Please select all that apply.",opts:COMPS.slice(),ol:"Other"});});
+if(sel.includes("other")){var ot=st.ot.Q3a?('"'+st.ot.Q3a+'"'):"Other";q.push({id:"Q3b_other",type:"mo",sec:"Travel Behavior",lab:"Q3b",tag:ot+" trip",text:"For your "+ot+" trip(s), who did you travel with?",opts:COMPS.slice(),ol:"Other"});}
+q.push({id:"Q4",type:"single",sec:"Travel Behavior",lab:"Q4",text:"What is your typical per-person budget for a leisure trip, including accommodation, transportation, food, and activities?",
+opts:[{v:"under500",l:"Under $500"},{v:"500-999",l:"$500-$999"},{v:"1000-1999",l:"$1,000-$1,999"},{v:"2000-2999",l:"$2,000-$2,999"},{v:"3000-4999",l:"$3,000-$4,999"},{v:"5000+",l:"$5,000+"},{v:"unsure",l:"Not sure / prefer not to say"}]});
+q.push({id:"Q5",type:"mo",sec:"Travel Behavior",lab:"Q5",text:"What types of accommodation do you typically use when traveling? Select all that apply.",
+opts:[{v:"hotel",l:"Hotel"},{v:"rental",l:"Short-term rental, such as Airbnb or Vrbo"},{v:"friends_family",l:"Staying with friends or family"},{v:"hostel",l:"Hostel"},{v:"resort",l:"Resort / all-inclusive"},{v:"camping",l:"Camping / glamping"},{v:"housesitting",l:"House sitting, meaning staying in someone else's home in exchange for pet or home care"},{v:"exchange",l:"Home exchange"}],ol:"Other"});
 
-  questions.push({ id:"Q1", type:"single", section:"Travel Behavior", label:"Q1",
-    text:"Approximately how many leisure trips have you taken in the past 2 years?",
-    options:[
-      {value:"1-2",label:"1-2 trips"},{value:"3-4",label:"3-4 trips"},
-      {value:"5-6",label:"5-6 trips"},{value:"7-9",label:"7-9 trips"},
-      {value:"10+",label:"10 or more trips"},
-    ]});
+// Section 3 - Most Recent Trip
+q.push({id:"S3_INTRO",type:"intro",sec:"Most Recent Trip",lab:"Introduction",text:"Now we're going to pivot and ask you questions about your most recent leisure trip."});
+q.push({id:"Q6",type:"mo",sec:"Most Recent Trip",lab:"Q6",text:"Thinking about your most recent leisure trip, who did you travel with?",
+opts:[{v:"solo",l:"I traveled solo"},{v:"partner",l:"A romantic partner or spouse"},{v:"friends",l:"Friend(s)"},{v:"family",l:"Family member(s)"},{v:"children",l:"My child / children"},{v:"pets",l:"My pet(s)"},{v:"group_tour",l:"A group tour or organized travel group"},{v:"strangers",l:"People I did not know well before the trip"}],ol:"Other"});
+q.push({id:"Q7",type:"text",sec:"Most Recent Trip",lab:"Q7",text:"Where did you go on your most recent leisure trip?",ph:"e.g. Cancun, Mexico"});
+q.push({id:"Q8",type:"single",sec:"Most Recent Trip",lab:"Q8",text:"How long was your most recent leisure trip?",
+opts:[{v:"1-2",l:"1-2 nights"},{v:"3-4",l:"3-4 nights"},{v:"5-7",l:"5-7 nights"},{v:"8-14",l:"8-14 nights"},{v:"15+",l:"15+ nights"}]});
+q.push({id:"Q9",type:"single",sec:"Most Recent Trip",lab:"Q9",text:"Approximately how much did you personally spend on your most recent leisure trip, including accommodation, transportation, food, and activities?",
+opts:[{v:"under500",l:"Under $500"},{v:"500-999",l:"$500-$999"},{v:"1000-1999",l:"$1,000-$1,999"},{v:"2000-2999",l:"$2,000-$2,999"},{v:"3000-4999",l:"$3,000-$4,999"},{v:"5000+",l:"$5,000+"},{v:"unsure",l:"Not sure / prefer not to say"}]});
+q.push({id:"Q10",type:"so",sec:"Most Recent Trip",lab:"Q10",text:"What type of accommodation did you primarily use on your most recent leisure trip?",
+opts:[{v:"hotel",l:"Hotel"},{v:"rental",l:"Short-term rental, such as Airbnb or Vrbo"},{v:"friends_family",l:"Stayed with friends or family"},{v:"hostel",l:"Hostel"},{v:"resort",l:"Resort / all-inclusive"},{v:"camping",l:"Camping / glamping"},{v:"housesitting",l:"House sitting, meaning staying in someone else's home in exchange for pet or home care"},{v:"exchange",l:"Home exchange"}],ol:"Other"});
+q.push({id:"Q11",type:"mo",sec:"Most Recent Trip",lab:"Q11",text:"For your most recent leisure trip, what were the biggest factors that influenced your choice of destination? Select up to 3.",max:3,
+opts:[{v:"personal",l:"I personally wanted to go there"},{v:"companion",l:"The person(s) I was traveling with wanted to go there"},{v:"pet_needs",l:"My pet's needs influenced the destination"},{v:"affordable",l:"The destination was easier or more affordable than other options"},{v:"safe",l:"The destination felt safe"},{v:"new",l:"The destination was somewhere new to me"},{v:"move",l:"The destination was somewhere I was considering moving to"},{v:"community",l:"The destination gave me a chance to meet people or feel part of a community"},{v:"domestic",l:"I chose a domestic destination instead of an international one because of current world events"},{v:"avoided",l:"I avoided a specific country or region because of safety concerns or political tensions"},{v:"none",l:"None of the above"}],ol:"Other",excl:"none"});
+q.push({id:"Q12a",type:"single",sec:"Most Recent Trip",lab:"Q12a",text:"For your most recent leisure trip, did you experience any tension, disagreement, or compromise around the trip?",
+opts:[{v:"before",l:"Yes, before the trip"},{v:"during",l:"Yes, during the trip"},{v:"after",l:"Yes, after the trip"},{v:"no",l:"No"}]});
+q.push({id:"Q12b",type:"mo",sec:"Most Recent Trip",lab:"Q12b",text:"What was it about? Select all that apply.",si:function(){return st.a.Q12a&&st.a.Q12a!=="no";},
+opts:[{v:"destination",l:"Destination"},{v:"budget",l:"Budget"},{v:"accommodation",l:"Accommodation"},{v:"activities",l:"Activities"},{v:"schedule",l:"Schedule / timing"},{v:"expectations",l:"Different expectations"},{v:"independence",l:"Wanting different levels of independence or alone time"},{v:"pet_logistics",l:"Pet care or pet logistics"},{v:"childcare",l:"Childcare or family responsibilities"}],ol:"Other"});
+q.push({id:"Q13",type:"matrix",sec:"Most Recent Trip",lab:"Q13",text:"Thinking about your most recent leisure trip, how did the trip affect your relationship with the following people who were part of the trip?",
+rows:[{v:"partner",l:"Romantic partner / spouse"},{v:"children",l:"Child / children"},{v:"family",l:"Family members"},{v:"friends",l:"Friends"},{v:"strangers",l:"Someone I didn't know well before the trip"}],
+cols:[{v:"strengthened",l:"Strengthened relationship"},{v:"no_change",l:"No meaningful change"},{v:"tension",l:"Created tension"},{v:"damage",l:"Caused serious damage"},{v:"na",l:"Not applicable"}]});
+q.push({id:"Q14",type:"multi",sec:"Most Recent Trip",lab:"Q14",text:"On your most recent leisure trip, did any of the following happen?",excl:"none",
+opts:[{v:"meaningful_conn",l:"I made a meaningful connection with someone I did not know well before the trip"},{v:"lasting_conn",l:"I made a friendship or connection that lasted beyond the trip"},{v:"community",l:"I felt part of a community or group"},{v:"learned_other",l:"I learned something important about someone I traveled with"},{v:"learned_self",l:"I learned something important about myself"},{v:"less_alone",l:"I felt less alone"},{v:"interested_dest",l:"I became more interested in living in the destination I visited"},{v:"interested_lifestyle",l:"I became more interested in trying a different lifestyle"},{v:"life_decision",l:"I made or accelerated a bigger life decision"},{v:"none",l:"None of these"}]});
+q.push({id:"Q14A",type:"textarea",sec:"Most Recent Trip",lab:"Q14A",text:"Please tell us more about what happened.",si:function(){var v=st.a.Q14;return v&&Array.isArray(v)&&!v.includes("none")&&v.length>0;},req:true});
 
-  questions.push({ id:"Q2", type:"single", section:"Travel Behavior", label:"Q2",
-    text:"How long is your typical leisure trip?",
-    options:[
-      {value:"1-2",label:"1-2 nights"},{value:"3-4",label:"3-4 nights"},
-      {value:"5-7",label:"5-7 nights"},{value:"8-14",label:"8-14 nights"},
-      {value:"15+",label:"15+ nights"},
-    ]});
+// Section 4 - CEP
+var cepShuf=shuf(CEP,SEED);
+q.push({id:"Q15",type:"matrix",sec:"Travel Motivations",lab:"Q15",text:"When planning a leisure trip, how important is each of the following to you?",
+rows:cepShuf.map(function(c){return{v:c.k,l:c.p};}),
+cols:[{v:"1",l:"Not at all important"},{v:"2",l:"Slightly important"},{v:"3",l:"Moderately important"},{v:"4",l:"Very important"},{v:"5",l:"Extremely important"}]});
+q.push({id:"Q16",type:"matrix",sec:"Travel Motivations",lab:"Q16",text:"In or after a leisure trip, how often have you experienced each of the following?",
+rows:cepShuf.map(function(c){return{v:c.k,l:c.e};}),
+cols:[{v:"1",l:"Rarely or never"},{v:"2",l:"Sometimes"},{v:"3",l:"About half the time"},{v:"4",l:"Most of the time"},{v:"5",l:"Always"}]});
 
-  questions.push({ id:"Q3a", type:"multi_other", section:"Travel Behavior", label:"Q3a",
-    text:"What type(s) of leisure trip have you taken in the past 2 years? Please select all that apply.",
-    options: TRIP_TYPES.slice(),
-    otherLabel:"Other"
-  });
+// Section 5 - Pet Travel (conditional)
+q.push({id:"Q17",type:"so",sec:"Pet Travel",lab:"Q17",si:function(){return st.a.S5==="yes";},text:"When you travel without your pet(s), what do you typically do for pet care?",
+opts:shuf([{v:"friend_family",l:"Have a friend or family member watch them"},{v:"board",l:"Board them at a kennel or pet boarding facility"},{v:"sitter_day",l:"Pay a pet sitter to come to my home (no overnight stay)"},{v:"sitter_overnight",l:"Pay a pet sitter to stay in my home overnight"},{v:"app_platform",l:"Connect with a pet sitter through an app or platform (e.g., TrustedHousesitters, Rover)"},{v:"take_along",l:"Take them with me instead"},{v:"rarely_without",l:"I rarely travel without my pet(s)"}],SEED+1),ol:"Other"});
+var q18rows=shuf([{v:"canceled",l:"Canceled a trip you had planned"},{v:"shortened",l:"Shortened a trip because of my pet(s)"},{v:"closer",l:"Chose a closer destination"},{v:"avoided",l:"Avoided booking a trip you wanted to take"},{v:"spent_more",l:"Spent more than you wanted on pet care"},{v:"pet_dest",l:"Chose a destination where you could bring your pet(s)"},{v:"pet_acc",l:"Chose an accommodation because it was pet-friendly"},{v:"guilty",l:"Felt guilty while away from your pet"},{v:"anxious",l:"Felt anxious about who was caring for your pet"}],SEED+2);
+q.push({id:"Q18",type:"matrix",sec:"Pet Travel",lab:"Q18",si:function(){return st.a.S5==="yes";},text:"In the past 2 years, how often have you done any of the following because of your pet(s)?",
+rows:q18rows,cols:[{v:"always",l:"Always"},{v:"often",l:"Often"},{v:"sometimes",l:"Sometimes"},{v:"rarely",l:"Rarely"},{v:"never",l:"Never"}]});
+q.push({id:"Q19",type:"mo",sec:"Pet Travel",lab:"Q19",si:function(){return st.a.S5==="yes";},text:"What would make you feel fully comfortable leaving your pet to travel? Select up to 3.",max:3,
+opts:[{v:"loves_animals",l:"Knowing the person caring for my pet loves animals"},{v:"stay_home",l:"Having the pet sitter stay in my home so my pet is in a familiar environment"},{v:"updates",l:"Getting regular photo or video updates while I am away"},{v:"reviews",l:"Reviews or ratings from other pet owners"},{v:"lower_cost",l:"A lower-cost option than boarding"},{v:"emergency_vet",l:"Knowing there is a clear plan for emergency vet care if needed"},{v:"meet_sitter",l:"Being able to meet the sitter beforehand"},{v:"verified",l:"Knowing the sitter is verified or background-checked"},{v:"nothing",l:"Nothing, I do not think I would ever feel fully comfortable"}],ol:"Other",excl:"nothing"});
+q.push({id:"Q20",type:"mo",sec:"Pet Travel",lab:"Q20",si:function(){return st.a.S5==="yes";},text:"If you had access to a trusted, verified person to care for your pet in your home, how would that affect your travel?",
+opts:shuf([{v:"more_often",l:"I would travel more often"},{v:"longer",l:"I would take longer trips"},{v:"farther",l:"I would consider farther destinations"},{v:"less_guilty",l:"I would feel less guilty while away"},{v:"less_anxious",l:"I would feel less anxious while away"},{v:"spend_less",l:"I would spend less on pet care"},{v:"willing_without",l:"I would be more willing to travel without my pet"},{v:"no_change",l:"It would not change how I travel"},{v:"still_not",l:"I would still not feel comfortable leaving my pet"}],SEED+3)});
 
-  // Q3b follow-ups for each selected trip type
-  var selectedTrips = state.answers.Q3a || [];
+// Section 6
+q.push({id:"Q21",type:"mo",sec:"House Sitting",lab:"Q21",text:"Which of the following would make you consider house sitting? Select all that apply.",excl:"would_not",
+opts:[{v:"lower_cost",l:"Lower-cost travel"},{v:"time_pets",l:"Spending time with pets while traveling"},{v:"like_local",l:"Experiencing a destination more like a local"},{v:"try_city",l:"Trying out a city or neighborhood before moving"},{v:"home_like",l:"Having a more home-like space"},{v:"meeting_people",l:"Meeting people or feeling more connected to a place"},{v:"longer_trip",l:"Taking a longer trip than I could otherwise afford"},{v:"would_not",l:"I would not consider house sitting"}],ol:"Other"});
 
-  TRIP_TYPES.forEach(function(trip) {
-    if (selectedTrips.includes(trip.value)) {
-      questions.push({
-        id: "Q3b_" + trip.value,
-        type: "multi_other",
-        section: "Travel Behavior",
-        label: "Q3b",
-        tripTag: trip.label,
-        text: "For your " + trip.label + " trip(s), who did you travel with? Please select all that apply.",
-        options: COMPANION_OPTIONS.slice(),
-        otherLabel: "Other"
-      });
-    }
-  });
-
-  if (selectedTrips.includes("other")) {
-    var otherText = state.otherTexts.Q3a ? ('"' + state.otherTexts.Q3a + '"') : "Other";
-    questions.push({
-      id: "Q3b_other",
-      type: "multi_other",
-      section: "Travel Behavior",
-      label: "Q3b",
-      tripTag: otherText + " trip",
-      text: "For your " + otherText + " trip(s), who did you travel with? Please select all that apply.",
-      options: COMPANION_OPTIONS.slice(),
-      otherLabel: "Other"
-    });
-  }
-
-  questions.push({ id:"Q4", type:"single", section:"Travel Behavior", label:"Q4",
-    text:"What is your typical per-person budget for a leisure trip, including accommodation, transportation, food, and activities?",
-    options:[
-      {value:"under500",label:"Under $500"},{value:"500-999",label:"$500-$999"},
-      {value:"1000-1999",label:"$1,000-$1,999"},{value:"2000-2999",label:"$2,000-$2,999"},
-      {value:"3000-4999",label:"$3,000-$4,999"},{value:"5000+",label:"$5,000+"},
-      {value:"unsure",label:"Not sure / prefer not to say"},
-    ]});
-
-  questions.push({ id:"Q5", type:"multi_other", section:"Travel Behavior", label:"Q5",
-    text:"What types of accommodation do you typically use when traveling? Select all that apply.",
-    options:[
-      {value:"hotel",label:"Hotel"},
-      {value:"rental",label:"Short-term rental, such as Airbnb or Vrbo"},
-      {value:"friends_family",label:"Staying with friends or family"},
-      {value:"hostel",label:"Hostel"},
-      {value:"resort",label:"Resort / all-inclusive"},
-      {value:"camping",label:"Camping / glamping"},
-      {value:"housesitting",label:"House sitting, meaning staying in someone else's home in exchange for pet or home care"},
-      {value:"exchange",label:"Home exchange"},
-    ], otherLabel:"Other" });
-
-  // Placeholders for remaining sections
-  questions.push({ id:"PH_S3", type:"placeholder", section:"Most Recent Trip", label:"Section 3",
-    text:"Q6-Q14A: Most recent trip details, conflict, connection, open-end." });
-  questions.push({ id:"PH_S4", type:"placeholder", section:"Travel Motivations", label:"Section 4",
-    text:"Q15-Q16: Planning importance and experience frequency (20 items each)." });
-  questions.push({ id:"PH_S5", type:"placeholder", section:"Pet Travel", label:"Section 5",
-    text:"Q17-Q20: Pet care, impact, comfort, trusted care.",
-    showIf:function(){ return state.answers.S5==="yes"; } });
-  questions.push({ id:"PH_S6", type:"placeholder", section:"House Sitting", label:"Section 6",
-    text:"Q21: House sitting motivations." });
-  questions.push({ id:"PH_S7", type:"placeholder", section:"Demographics", label:"Section 7",
-    text:"D1-D8: Demographics." });
-
-  return questions;
+// Section 7 - Demographics
+q.push({id:"D1",type:"single",sec:"Demographics",lab:"D1",text:"Has the current state of the world changed how you think about international travel?",
+opts:[{v:"less",l:"Yes, I am traveling internationally less than I planned to this year"},{v:"replaced",l:"Yes, I replaced a planned international trip with a domestic one"},{v:"reconsidering",l:"Yes, I am reconsidering specific destinations I previously wanted to visit"},{v:"no",l:"No, it has not changed my travel plans"},{v:"not_planning",l:"I was not planning international travel regardless"}]});
+q.push({id:"D2",type:"so",sec:"Demographics",lab:"D2",text:"What is your gender?",
+opts:[{v:"man",l:"Man"},{v:"woman",l:"Woman"},{v:"nonbinary",l:"Non-binary / third gender"},{v:"pnts",l:"Prefer not to say"}],ol:"Prefer to self-describe"});
+q.push({id:"D3",type:"so",sec:"Demographics",lab:"D3",text:"What is your sexual orientation?",
+opts:[{v:"straight",l:"Straight or Heterosexual"},{v:"gay_lesbian",l:"Gay or Lesbian"},{v:"bi_pan",l:"Bisexual or Pansexual"},{v:"asexual",l:"Asexual"},{v:"queer",l:"Queer"},{v:"pnts",l:"Prefer not to say"}],ol:"Prefer to self-describe"});
+q.push({id:"D4",type:"single",sec:"Demographics",lab:"D4",text:"Do you have any children under 18 living in your household?",opts:[{v:"yes",l:"Yes"},{v:"no",l:"No"}]});
+q.push({id:"D5",type:"single",sec:"Demographics",lab:"D5",text:"What is your annual household income before taxes?",
+opts:[{v:"under25k",l:"Under $25,000"},{v:"25-49k",l:"$25,000-$49,999"},{v:"50-74k",l:"$50,000-$74,999"},{v:"75-99k",l:"$75,000-$99,999"},{v:"100-149k",l:"$100,000-$149,999"},{v:"150-199k",l:"$150,000-$199,999"},{v:"200k+",l:"$200,000+"},{v:"pnts",l:"Prefer not to say"}]});
+var d6opts=shuf([{v:"white",l:"White"},{v:"black",l:"Black or African American"},{v:"asian",l:"Asian or Asian American"},{v:"native",l:"American Indian or Alaska Native"},{v:"pacific",l:"Native Hawaiian or other Pacific Islander"},{v:"hispanic",l:"Hispanic"}],SEED+4);
+d6opts.push({v:"pnts",l:"Prefer not to answer"});
+q.push({id:"D6",type:"mo",sec:"Demographics",lab:"D6",text:"Which ethnicity/race do you identify with? Please select all that apply.",opts:d6opts,ol:"Other",excl:"pnts"});
+q.push({id:"D7",type:"mo",sec:"Demographics",lab:"D7",text:"What is your current employment status? Select all that apply.",
+opts:[{v:"full_time",l:"Employed full-time"},{v:"part_time",l:"Employed part-time"},{v:"self_employed",l:"Self-employed / freelance"},{v:"student",l:"Student"},{v:"unemployed",l:"Unemployed"},{v:"retired",l:"Retired"},{v:"caregiver",l:"Stay-at-home parent / caregiver"}],ol:"Other"});
+q.push({id:"D8",type:"single",sec:"Demographics",lab:"D8",text:"In which region of the United States do you currently live?",
+opts:[{v:"northeast",l:"Northeast"},{v:"midwest",l:"Midwest"},{v:"south",l:"South"},{v:"west",l:"West"}]});
+q.push({id:"FB",type:"textarea",sec:"Demographics",lab:"Feedback",text:"Thank you for taking the time to complete this survey. Do you have any other feedback that you'd like to share?",req:false});
+return q;
 }
 
-// ============================================================
-// VISIBLE LISTS
-// ============================================================
-function getVisibleScreener() {
-  return SCREENER.filter(function(q){ return !q.showIf || q.showIf(); });
-}
-function getVisibleMain() {
-  return buildMainQuestions().filter(function(q){ return !q.showIf || q.showIf(); });
-}
+function vs(){return SCR.filter(function(q){return !q.si||q.si();});}
+function vm(){return buildMain().filter(function(q){return !q.si||q.si();});}
 
-// ============================================================
-// TIMER
-// ============================================================
-setInterval(function(){
-  state.elapsed = Math.floor((Date.now()-state.startTime)/1000);
-  var el = document.getElementById("timer-display");
-  if(el) el.textContent = "Time: "+formatTime(state.elapsed);
-},1000);
+// Timer
+setInterval(function(){st.el=Math.floor((Date.now()-st.t0)/1000);var e=document.getElementById("tm");if(e)e.textContent="Time: "+ft(st.el);},1000);
+// Quotas
+fetch(C.apiUrl+"?action=check_quotas").then(function(r){return r.json();}).then(function(d){st.qc=d.quotas||{};}).catch(function(){st.qc={};});
 
 // ============================================================
 // RENDER
 // ============================================================
-function render() {
-  document.getElementById("meta-rid").textContent = "ID: "+RID;
-  document.getElementById("meta-device").textContent = DEVICE;
-  if(state.phase==="end"){ renderEnd(); return; }
-  if(state.phase==="screener"){ renderQuestion(getVisibleScreener(), state.screenerPage); return; }
-  renderQuestion(getVisibleMain(), state.mainPage);
+function render(){
+document.getElementById("mr").textContent="ID: "+RID;
+document.getElementById("md").textContent=DV;
+if(st.phase==="end"){renderEnd();return;}
+if(st.phase==="screener"){rq(vs(),st.sp);return;}
+rq(vm(),st.mp);
 }
 
-function renderQuestion(list, idx) {
-  var q = list[idx];
-  if(!q) return;
-  var card = document.getElementById("question-card");
-  var html = '<div class="sec-label">'+escHtml(q.section)+'</div>';
-  if(q.tripTag) html += '<div class="trip-tag">'+escHtml(q.tripTag)+'</div>';
-  html += '<div class="q-text">'+escHtml(q.text)+'</div>';
-  if(q.sub) html += '<div class="q-sub">'+escHtml(q.sub)+'</div>';
-
-  if(q.type==="text_number") html += renderTextInput(q);
-  else if(q.type==="single") html += renderSingleOpts(q.id, q.options);
-  else if(q.type==="multi") html += renderMultiOpts(q.id, q.options);
-  else if(q.type==="multi_other") html += renderMultiOpts(q.id, q.options, q.otherLabel);
-  else if(q.type==="placeholder") html += '<div class="placeholder">'+escHtml(q.text)+'</div>';
-
-  html += '<div id="error-msg" class="err hidden"></div>';
-  card.innerHTML = html;
-
-  if(q.type==="text_number") bindTextInput(q);
-  if(q.type==="single"||q.type==="multi"||q.type==="multi_other") bindOptionClicks(q);
-
-  updateProgress(list, idx, q);
-  updateNavButtons();
+function rq(list,idx){
+var q=list[idx];if(!q)return;
+var card=document.getElementById("qc");
+var h='<div class="sec-label">'+esc(q.sec)+'</div>';
+if(q.tag)h+='<div class="trip-tag">'+esc(q.tag)+'</div>';
+if(q.type!=="intro")h+='<div class="q-text">'+esc(q.text)+'</div>';
+if(q.sub)h+='<div class="q-sub">'+esc(q.sub)+'</div>';
+if(q.type==="intro")h+='<div class="intro-text">'+esc(q.text)+'</div>';
+else if(q.type==="num")h+=rNum(q);
+else if(q.type==="text")h+=rText(q);
+else if(q.type==="textarea")h+=rTA(q);
+else if(q.type==="single")h+=rSingle(q.id,q.opts);
+else if(q.type==="so")h+=rSingleOther(q.id,q.opts,q.ol);
+else if(q.type==="multi"||q.type==="mo")h+=rMulti(q.id,q.opts,q.type==="mo"?q.ol:null,q.excl,q.max);
+else if(q.type==="matrix")h+=rMatrix(q);
+h+='<div id="em" class="err hidden"></div>';
+card.innerHTML=h;
+bind(q);
+upProg(list,idx,q);upNav();
 }
 
-function renderTextInput(q) {
-  return '<input type="text" inputmode="numeric" class="text-input" id="input-field" placeholder="'+escHtml(q.placeholder)+'" value="'+escHtml(state.answers[q.id]||"")+'">';
+function rNum(q){return'<input type="text" inputmode="numeric" class="text-input" id="inp" placeholder="'+esc(q.ph)+'" value="'+esc(st.a[q.id]||"")+'">';}
+function rText(q){return'<input type="text" class="text-input" id="inp" placeholder="'+esc(q.ph||"")+'" value="'+esc(st.a[q.id]||"")+'">';}
+function rTA(q){return'<textarea class="textarea" id="inp" placeholder="'+esc(q.ph||"")+'">'+(st.a[q.id]||"")+'</textarea>';}
+
+function rSingle(qid,opts){
+var val=st.a[qid]||"",h='<div class="opt-group">';
+opts.forEach(function(o){var s=val===o.v?" selected":"";h+='<div class="opt'+s+'" data-v="'+o.v+'" data-q="'+qid+'" data-t="s"><div class="rc"><div class="rd"></div></div><span>'+esc(o.l)+'</span></div>';});
+return h+'</div>';
 }
 
-function renderSingleOpts(qid, opts) {
-  var val = state.answers[qid]||"";
-  var h = '<div class="opt-group">';
-  opts.forEach(function(o){
-    var sel = val===o.value?" selected":"";
-    h += '<div class="opt'+sel+'" data-value="'+o.value+'" data-qid="'+qid+'" data-type="single">';
-    h += '<div class="radio-circle"><div class="radio-dot"></div></div>';
-    h += '<span>'+escHtml(o.label)+'</span></div>';
-  });
-  return h+'</div>';
+function rSingleOther(qid,opts,ol){
+var val=st.a[qid]||"",h='<div class="opt-group">';
+opts.forEach(function(o){var s=val===o.v?" selected":"";h+='<div class="opt'+s+'" data-v="'+o.v+'" data-q="'+qid+'" data-t="s"><div class="rc"><div class="rd"></div></div><span>'+esc(o.l)+'</span></div>';});
+if(ol){var os=val==="other"?" selected":"";
+h+='<div class="other-row'+os+'" data-q="'+qid+'"><div class="cb" data-v="other" data-q="'+qid+'" data-t="so-chk"><span class="cm">✓</span></div><span style="white-space:nowrap">'+esc(ol)+':</span><input class="other-input" id="oi-'+qid+'" placeholder="Please specify" value="'+esc(st.ot[qid]||"")+'"></div>';}
+return h+'</div>';
 }
 
-function renderMultiOpts(qid, opts, otherLabel) {
-  var vals = state.answers[qid]||[];
-  var h = '<div class="opt-group">';
-  opts.forEach(function(o){
-    var sel = vals.includes(o.value)?" selected":"";
-    h += '<div class="opt'+sel+'" data-value="'+o.value+'" data-qid="'+qid+'" data-type="multi">';
-    h += '<div class="chk-box"><span class="chk-mark">✓</span></div>';
-    h += '<span>'+escHtml(o.label)+'</span></div>';
-  });
-  if(otherLabel){
-    var oSel = vals.includes("other")?" selected":"";
-    h += '<div class="other-row'+oSel+'" data-qid="'+qid+'">';
-    h += '<div class="chk-box" data-value="other" data-qid="'+qid+'" data-type="multi-other-chk"><span class="chk-mark">✓</span></div>';
-    h += '<span style="white-space:nowrap">'+escHtml(otherLabel)+':</span>';
-    h += '<input class="other-input" id="other-input-'+qid+'" placeholder="Please specify" value="'+escHtml(state.otherTexts[qid]||"")+'">';
-    h += '</div>';
-  }
-  return h+'</div>';
+function rMulti(qid,opts,ol,excl,max){
+var vals=st.a[qid]||[],h='<div class="opt-group">';
+if(max)h+='<div class="q-sub" style="margin-top:-12px;margin-bottom:12px">Select up to '+max+'.</div>';
+opts.forEach(function(o){var s=vals.includes(o.v)?" selected":"";h+='<div class="opt'+s+'" data-v="'+o.v+'" data-q="'+qid+'" data-t="m" data-excl="'+(excl||"")+'" data-max="'+(max||"")+'"><div class="cb"><span class="cm">✓</span></div><span>'+esc(o.l)+'</span></div>';});
+if(ol){var os=vals.includes("other")?" selected":"";
+h+='<div class="other-row'+os+'" data-q="'+qid+'"><div class="cb" data-v="other" data-q="'+qid+'" data-t="mo-chk" data-excl="'+(excl||"")+'" data-max="'+(max||"")+'"><span class="cm">✓</span></div><span style="white-space:nowrap">'+esc(ol)+':</span><input class="other-input" id="oi-'+qid+'" placeholder="Please specify" value="'+esc(st.ot[qid]||"")+'"></div>';}
+return h+'</div>';
+}
+
+function rMatrix(q){
+var data=st.a[q.id]||{};
+var h='<div class="mx-wrap"><table class="mx-table"><thead><tr><th></th>';
+q.cols.forEach(function(c){h+='<th>'+esc(c.l)+'</th>';});
+h+='</tr></thead><tbody>';
+q.rows.forEach(function(r){
+h+='<tr><td>'+esc(r.l)+'</td>';
+q.cols.forEach(function(c){
+var checked=data[r.v]===c.v;
+h+='<td><div class="mx-radio'+(checked?" checked":"")+'" data-q="'+q.id+'" data-r="'+r.v+'" data-c="'+c.v+'"><div class="mx-dot"></div></div></td>';
+});
+h+='</tr>';});
+return h+'</tbody></table></div>';
 }
 
 // ============================================================
-// EVENT BINDING
+// BINDING
 // ============================================================
-function bindTextInput(q) {
-  var inp = document.getElementById("input-field");
-  if(!inp) return;
-  inp.focus();
-  inp.addEventListener("input", function(){
-    state.answers[q.id] = inp.value.replace(/[^0-9]/g,"").slice(0,4);
-    inp.value = state.answers[q.id];
-  });
-  inp.addEventListener("keydown", function(e){ if(e.key==="Enter") handleNext(); });
-}
-
-function bindOptionClicks(q) {
-  document.querySelectorAll('[data-type="single"]').forEach(function(el){
-    el.addEventListener("click", function(){
-      state.answers[el.dataset.qid] = el.dataset.value;
-      render();
-    });
-  });
-  document.querySelectorAll('[data-type="multi"]').forEach(function(el){
-    el.addEventListener("click", function(){
-      var qid=el.dataset.qid, val=el.dataset.value;
-      if(!state.answers[qid]) state.answers[qid]=[];
-      var a=state.answers[qid], i=a.indexOf(val);
-      if(i>=0) a.splice(i,1); else a.push(val);
-      render();
-    });
-  });
-  document.querySelectorAll('[data-type="multi-other-chk"]').forEach(function(el){
-    el.addEventListener("click", function(e){
-      e.stopPropagation();
-      var qid=el.dataset.qid;
-      if(!state.answers[qid]) state.answers[qid]=[];
-      var a=state.answers[qid], i=a.indexOf("other");
-      if(i>=0) a.splice(i,1); else a.push("other");
-      render();
-    });
-  });
-  var otherInp = document.getElementById("other-input-"+q.id);
-  if(otherInp){
-    otherInp.addEventListener("input", function(){
-      state.otherTexts[q.id] = otherInp.value;
-      if(otherInp.value && !state.answers[q.id]) state.answers[q.id]=[];
-      if(otherInp.value && !state.answers[q.id].includes("other")){
-        state.answers[q.id].push("other");
-        render();
-      }
-    });
-    otherInp.addEventListener("click", function(e){ e.stopPropagation(); });
-  }
+function bind(q){
+if(q.type==="num"){var inp=document.getElementById("inp");if(inp){inp.focus();inp.addEventListener("input",function(){st.a[q.id]=inp.value.replace(/[^0-9]/g,"").slice(0,4);inp.value=st.a[q.id];});inp.addEventListener("keydown",function(e){if(e.key==="Enter")handleNext();});}}
+if(q.type==="text"){var inp2=document.getElementById("inp");if(inp2){inp2.focus();inp2.addEventListener("input",function(){st.a[q.id]=inp2.value;});inp2.addEventListener("keydown",function(e){if(e.key==="Enter")handleNext();});}}
+if(q.type==="textarea"){var ta=document.getElementById("inp");if(ta){ta.addEventListener("input",function(){st.a[q.id]=ta.value;});}}
+// Single
+document.querySelectorAll('[data-t="s"]').forEach(function(el){el.addEventListener("click",function(){st.a[el.dataset.q]=el.dataset.v;render();});});
+// Single with other
+document.querySelectorAll('[data-t="so-chk"]').forEach(function(el){el.addEventListener("click",function(e){e.stopPropagation();st.a[el.dataset.q]="other";render();});});
+// Multi
+document.querySelectorAll('[data-t="m"]').forEach(function(el){el.addEventListener("click",function(){
+var qid=el.dataset.q,v=el.dataset.v,excl=el.dataset.excl,max=parseInt(el.dataset.max)||0;
+if(!st.a[qid])st.a[qid]=[];var a=st.a[qid];
+if(excl&&v===excl){st.a[qid]=a.includes(v)?[]:[v];render();return;}
+a=a.filter(function(x){return x!==excl;});
+var i=a.indexOf(v);if(i>=0)a.splice(i,1);else{if(max&&a.length>=max)return;a.push(v);}
+st.a[qid]=a;render();});});
+// Multi other checkbox
+document.querySelectorAll('[data-t="mo-chk"]').forEach(function(el){el.addEventListener("click",function(e){
+e.stopPropagation();var qid=el.dataset.q,excl=el.dataset.excl,max=parseInt(el.dataset.max)||0;
+if(!st.a[qid])st.a[qid]=[];var a=st.a[qid];
+a=a.filter(function(x){return x!==excl;});
+var i=a.indexOf("other");if(i>=0)a.splice(i,1);else{if(max&&a.length>=max)return;a.push("other");}
+st.a[qid]=a;render();});});
+// Other input
+var oi=document.getElementById("oi-"+q.id);
+if(oi){oi.addEventListener("input",function(){st.ot[q.id]=oi.value;
+if(q.type==="so"){if(oi.value)st.a[q.id]="other";}
+else{if(oi.value){if(!st.a[q.id])st.a[q.id]=[];if(!st.a[q.id].includes("other")){st.a[q.id].push("other");render();}}}
+});oi.addEventListener("click",function(e){e.stopPropagation();});}
+// Matrix
+document.querySelectorAll('.mx-radio').forEach(function(el){el.addEventListener("click",function(){
+var qid=el.dataset.q,r=el.dataset.r,c=el.dataset.c;
+if(!st.a[qid])st.a[qid]={};st.a[qid][r]=c;render();});});
 }
 
 // ============================================================
 // PROGRESS & NAV
 // ============================================================
-function updateProgress(list, idx, q) {
-  var vs = getVisibleScreener(), vm = getVisibleMain();
-  var total = vs.length + vm.length;
-  var current = state.phase==="screener" ? idx : vs.length + idx;
-  var pct = Math.round((current/total)*100);
-  document.getElementById("progress-fill").style.width = pct+"%";
-  var label = q.section;
-  if(q.label) label += ": " + q.label;
-  document.getElementById("progress-label").textContent = label;
+function upProg(list,idx,q){
+var s=vs(),m=vm(),total=s.length+m.length;
+var cur=st.phase==="screener"?idx:s.length+idx;
+document.getElementById("pf").style.width=Math.round(cur/total*100)+"%";
+document.getElementById("pl").textContent=q.sec+(q.lab?": "+q.lab:"");
 }
-
-function updateNavButtons() {
-  var backBtn = document.getElementById("btn-back");
-  var nextBtn = document.getElementById("btn-next");
-  if(state.phase==="screener"){
-    backBtn.disabled = state.screenerPage===0;
-    nextBtn.textContent = "Next"; nextBtn.disabled = false;
-  } else {
-    var vm = getVisibleMain();
-    backBtn.disabled = false;
-    nextBtn.textContent = state.mainPage>=vm.length-1 ? "Submit" : "Next";
-    nextBtn.disabled = state.isSubmitting;
-  }
+function upNav(){
+var bb=document.getElementById("bb"),bn=document.getElementById("bn");
+if(st.phase==="screener"){bb.disabled=st.sp===0;bn.textContent="Next";bn.disabled=false;}
+else{var m=vm();bb.disabled=false;bn.textContent=st.mp>=m.length-1?"Submit":"Next";bn.disabled=st.sub;}
 }
 
 // ============================================================
 // END SCREEN
 // ============================================================
-function renderEnd() {
-  document.getElementById("header-area").style.display="none";
-  document.querySelector(".nav-row").style.display="none";
-  document.querySelector(".meta-bar").style.display="none";
-  var card=document.getElementById("question-card");
-  var t=state.endType, title, msg, color="#1a1a1a";
-  if(t==="terminated"){ title="Thank you for your interest"; msg="Unfortunately, you do not qualify for this survey. We appreciate your time."; }
-  else if(t==="quotaFull"){ title="Thank you for your interest"; msg="We have already reached the number of responses needed for your group. We appreciate your time."; }
-  else { title="Thank you!"; msg="Your responses have been recorded. Duration: "+formatTime(state.elapsed); color="#2c6e49"; }
-  var h='<div class="end-screen"><div class="end-title" style="color:'+color+'">'+title+'</div>';
-  h+='<div class="end-msg">'+msg+'</div>';
-  if(t!=="complete") h+='<div style="font-size:11px;color:#bbb;margin-top:16px">Ref: '+RID+'</div>';
-  h+='</div>';
-  card.innerHTML=h;
+function renderEnd(){
+document.getElementById("header-area").style.display="none";
+document.querySelector(".nav-row").style.display="none";
+document.querySelector(".meta-bar").style.display="none";
+var c=document.getElementById("qc"),t=st.et,title,msg,color="#1a1a1a";
+if(t==="terminated"){title="Thank you for your interest";msg="Unfortunately, you do not qualify for this survey. We appreciate your time.";}
+else if(t==="quotaFull"){title="Thank you for your interest";msg="We have already reached the number of responses needed for your group. We appreciate your time.";}
+else{title="Thank you!";msg="Your responses have been recorded. Duration: "+ft(st.el);color="#2c6e49";}
+c.innerHTML='<div class="end-screen"><div class="end-title" style="color:'+color+'">'+title+'</div><div class="end-msg">'+msg+'</div>'+(t!=="complete"?'<div style="font-size:11px;color:#bbb;margin-top:16px">Ref: '+RID+'</div>':'')+'</div>';
 }
-
-// ============================================================
-// ERROR HELPERS
-// ============================================================
-function showError(msg){ var el=document.getElementById("error-msg"); if(el){el.textContent=msg;el.classList.remove("hidden");} }
-function clearError(){ var el=document.getElementById("error-msg"); if(el){el.textContent="";el.classList.add("hidden");} }
 
 // ============================================================
 // VALIDATION
 // ============================================================
-function validateScreener() {
-  var vs=getVisibleScreener(), q=vs[state.screenerPage]; if(!q) return false;
-  var val=state.answers[q.id];
-  switch(q.id){
-    case "S1": {
-      var y=parseInt(val,10);
-      if(!val||isNaN(y)||y<1900||y>CONFIG.currentYear){showError("Please enter a valid birth year.");return false;}
-      var age=CONFIG.currentYear-y;
-      if(age<CONFIG.minAge||age>CONFIG.maxAge){endSurvey("terminated","Age "+age+" outside range");return "terminated";}
-      return true;
-    }
-    case "S2": {
-      if(!val||!Array.isArray(val)||val.length===0){showError("Please select at least one option.");return false;}
-      if(!val.includes("leisure")){endSurvey("terminated","No leisure trip");return "terminated";}
-      return true;
-    }
-    case "S3": {
-      if(!val){showError("Please select an option.");return false;}
-      if(val==="pnts"){endSurvey("terminated","Relationship: prefer not to say");return "terminated";}
-      if(state.quotaCache&&state.quotaCache.relationship&&state.quotaCache.relationship[val]){
-        var qc=state.quotaCache.relationship[val];
-        if(qc.current>=qc.target){endSurvey("quotaFull","Relationship quota full: "+val);return "terminated";}
-      }
-      return true;
-    }
-    case "S4": {
-      if(!val||(Array.isArray(val)&&val.length===0)){showError("Please select at least one option.");return false;}
-      return true;
-    }
-    case "S5": {
-      if(!val){showError("Please select an option.");return false;}
-      if(state.quotaCache&&state.quotaCache.pets&&state.quotaCache.pets[val]){
-        var qc2=state.quotaCache.pets[val];
-        if(qc2.current>=qc2.target){endSurvey("quotaFull","Pet quota full: "+val);return "terminated";}
-      }
-      return true;
-    }
-    case "S6": {
-      if(!val||(Array.isArray(val)&&val.length===0)){showError("Please select at least one option.");return false;}
-      return true;
-    }
-    case "AC": {
-      if(!val){showError("Please select an option.");return false;}
-      if(val!=="tuesday"){endSurvey("terminated","Failed attention check");return "terminated";}
-      return true;
-    }
-    default: return true;
-  }
-}
+function sErr(m){var e=document.getElementById("em");if(e){e.textContent=m;e.classList.remove("hidden");}}
+function cErr(){var e=document.getElementById("em");if(e){e.textContent="";e.classList.add("hidden");}}
 
-function validateMain() {
-  var vm=getVisibleMain(), q=vm[state.mainPage]; if(!q) return false;
-  var val=state.answers[q.id];
-  switch(q.type){
-    case "single":
-      if(!val){showError("Please select an option.");return false;}
-      return true;
-    case "multi":
-    case "multi_other":
-      if(!val||!Array.isArray(val)||val.length===0){showError("Please select at least one option.");return false;}
-      return true;
-    case "placeholder": return true;
-    default: return true;
-  }
+function valScr(){
+var s=vs(),q=s[st.sp];if(!q)return false;var v=st.a[q.id];
+switch(q.id){
+case"S1":{var y=parseInt(v,10);if(!v||isNaN(y)||y<1900||y>C.yr){sErr("Please enter a valid birth year.");return false;}var age=C.yr-y;if(age<C.minAge||age>C.maxAge){endS("terminated","Age "+age+" outside range");return"t";}return true;}
+case"S2":{if(!v||!Array.isArray(v)||v.length===0){sErr("Please select at least one option.");return false;}if(!v.includes("leisure")){endS("terminated","No leisure trip");return"t";}return true;}
+case"S3":{if(!v){sErr("Please select an option.");return false;}if(v==="pnts"){endS("terminated","Relationship: prefer not to say");return"t";}if(st.qc&&st.qc.relationship&&st.qc.relationship[v]){var qc=st.qc.relationship[v];if(qc.current>=qc.target){endS("quotaFull","Relationship quota full");return"t";}}return true;}
+case"S4":{if(!v||(Array.isArray(v)&&v.length===0)){sErr("Please select at least one option.");return false;}return true;}
+case"S5":{if(!v){sErr("Please select an option.");return false;}if(st.qc&&st.qc.pets&&st.qc.pets[v]){var q2=st.qc.pets[v];if(q2.current>=q2.target){endS("quotaFull","Pet quota full");return"t";}}return true;}
+case"S6":{if(!v||(Array.isArray(v)&&v.length===0)){sErr("Please select at least one option.");return false;}return true;}
+case"AC":{if(!v){sErr("Please select an option.");return false;}if(v!=="tuesday"){endS("terminated","Failed attention check");return"t";}return true;}
+default:return true;
+}}
+
+function valMain(){
+var m=vm(),q=m[st.mp];if(!q)return false;var v=st.a[q.id];
+if(q.type==="intro")return true;
+if(q.type==="textarea"){if(q.req&&(!v||v.trim()==="")){sErr("Please provide a response.");return false;}return true;}
+if(q.type==="single"||q.type==="so"){if(!v){sErr("Please select an option.");return false;}return true;}
+if(q.type==="multi"||q.type==="mo"){if(!v||!Array.isArray(v)||v.length===0){sErr("Please select at least one option.");return false;}return true;}
+if(q.type==="num"){if(!v){sErr("Please enter a value.");return false;}return true;}
+if(q.type==="text"){if(!v||v.trim()===""){sErr("Please provide a response.");return false;}return true;}
+if(q.type==="matrix"){if(!v||typeof v!=="object"){sErr("Please answer each row.");return false;}var missing=q.rows.filter(function(r){return!v[r.v];});if(missing.length>0){sErr("Please answer all rows. "+missing.length+" remaining.");return false;}return true;}
+return true;
 }
 
 // ============================================================
-// TERMINATION & SUBMISSION
+// TERMINATION & SUBMIT
 // ============================================================
-function endSurvey(type, reason) {
-  state.endType=type; state.endReason=reason; state.phase="end";
-  render();
-  postToSheet({
-    action: type==="quotaFull"?"quota_full":"terminate",
-    respondent_id:RID, start_time:new Date(state.startTime).toISOString(),
-    duration_seconds:Math.floor((Date.now()-state.startTime)/1000),
-    device_type:DEVICE, reason:reason,
-  });
+function endS(type,reason){
+st.et=type;st.er=reason;st.phase="end";render();
+post({action:type==="quotaFull"?"quota_full":"terminate",respondent_id:RID,start_time:new Date(st.t0).toISOString(),duration_seconds:Math.floor((Date.now()-st.t0)/1000),device_type:DV,reason:reason});
 }
 
-async function handleSubmit() {
-  state.isSubmitting=true; updateNavButtons();
-  var now=new Date(), dur=Math.floor((Date.now()-state.startTime)/1000);
-  var by=parseInt(state.answers.S1,10), age=CONFIG.currentYear-by;
+async function doSubmit(){
+st.sub=true;upNav();
+try{
+var now=new Date(),dur=Math.floor((Date.now()-st.t0)/1000);
+var by=parseInt(st.a.S1,10),age=C.yr-by;
+var r={
+respondent_id:RID,start_time:new Date(st.t0).toISOString(),end_time:now.toISOString(),
+duration_seconds:dur,device_type:DV,status:"complete",terminate_reason:"",
+S1_birth_year:st.a.S1||"",S1_age:isNaN(age)?"":age,
+S2_trip_types:aj(st.a.S2),S3_relationship:st.a.S3||"",
+S4_living:aj(st.a.S4),S4_living_other:st.ot.S4||"",
+S5_pets:st.a.S5||"",S6_pet_types:aj(st.a.S6),S6_pet_other:st.ot.S6||"",
+AC_attention:st.a.AC||"",
+Q1_trip_count:st.a.Q1||"",Q2_trip_length:st.a.Q2||"",
+Q3a_trip_types:aj(st.a.Q3a),Q3a_trip_other:st.ot.Q3a||""
+};
+ALL_TRIP_KEYS.forEach(function(k){r["Q3b_"+k+"_companions"]=aj(st.a["Q3b_"+k]);r["Q3b_"+k+"_companions_other"]=st.ot["Q3b_"+k]||"";});
+r.Q4_budget=st.a.Q4||"";r.Q5_accommodation=aj(st.a.Q5);r.Q5_accommodation_other=st.ot.Q5||"";
+r.Q6_companions=aj(st.a.Q6);r.Q6_companions_other=st.ot.Q6||"";
+r.Q7_destination=st.a.Q7||"";r.Q8_trip_length=st.a.Q8||"";r.Q9_budget=st.a.Q9||"";
+r.Q10_accommodation=st.a.Q10||"";r.Q10_accommodation_other=st.ot.Q10||"";
+r.Q11_dest_factors=aj(st.a.Q11);r.Q11_dest_factors_other=st.ot.Q11||"";
+r.Q12a_tension=st.a.Q12a||"";r.Q12b_tension_about=aj(st.a.Q12b);r.Q12b_tension_other=st.ot.Q12b||"";
+// Q13 matrix
+var q13=st.a.Q13||{};["partner","children","family","friends","strangers"].forEach(function(k){r["Q13_"+k]=q13[k]||"";});
+r.Q14_experiences=aj(st.a.Q14);r.Q14A_details=st.a.Q14A||"";
+// Q15/Q16 CEP
+var q15=st.a.Q15||{},q16=st.a.Q16||{};
+for(var i=1;i<=20;i++){r["Q15_"+i]=q15[String(i)]||"";r["Q16_"+i]=q16[String(i)]||"";}
+r.Q17_pet_care=st.a.Q17||"";r.Q17_pet_care_other=st.ot.Q17||"";
+var q18=st.a.Q18||{};["canceled","shortened","closer","avoided","spent_more","pet_dest","pet_acc","guilty","anxious"].forEach(function(k){r["Q18_"+k]=q18[k]||"";});
+r.Q19_comfort=aj(st.a.Q19);r.Q19_comfort_other=st.ot.Q19||"";
+r.Q20_trusted_care=aj(st.a.Q20);r.Q20_trusted_care_other=st.ot.Q20||"";
+r.Q21_house_sitting=aj(st.a.Q21);r.Q21_house_sitting_other=st.ot.Q21||"";
+r.D1_international=st.a.D1||"";r.D2_gender=st.a.D2||"";r.D2_gender_other=st.ot.D2||"";
+r.D3_orientation=st.a.D3||"";r.D3_orientation_other=st.ot.D3||"";
+r.D4_children=st.a.D4||"";r.D5_income=st.a.D5||"";
+r.D6_ethnicity=aj(st.a.D6);r.D6_ethnicity_other=st.ot.D6||"";
+r.D7_employment=aj(st.a.D7);r.D7_employment_other=st.ot.D7||"";
+r.D8_region=st.a.D8||"";r.feedback=st.a.FB||"";
 
-  // --------------------------------------------------------
-  // FIXED COLUMN SCHEMA
-  // Always send every column. Empty string if not answered.
-  // Must match COLUMN_SCHEMA in Apps Script exactly.
-  // --------------------------------------------------------
-  var rowData = {
-    // Metadata
-    respondent_id: RID,
-    start_time: new Date(state.startTime).toISOString(),
-    end_time: now.toISOString(),
-    duration_seconds: dur,
-    device_type: DEVICE,
-    status: "complete",
-    terminate_reason: "",
-    // Screener
-    S1_birth_year: state.answers.S1 || "",
-    S1_age: isNaN(age) ? "" : age,
-    S2_trip_types: arrJoin(state.answers.S2),
-    S3_relationship: state.answers.S3 || "",
-    S4_living: arrJoin(state.answers.S4),
-    S4_living_other: state.otherTexts.S4 || "",
-    S5_pets: state.answers.S5 || "",
-    S6_pet_types: arrJoin(state.answers.S6),
-    S6_pet_other: state.otherTexts.S6 || "",
-    AC_attention: state.answers.AC || "",
-    // Section 2
-    Q1_trip_count: state.answers.Q1 || "",
-    Q2_trip_length: state.answers.Q2 || "",
-    Q3a_trip_types: arrJoin(state.answers.Q3a),
-    Q3a_trip_other: state.otherTexts.Q3a || "",
-  };
-
-  // Q3b companion columns - always include ALL trip types, empty if not selected
-  ALL_TRIP_KEYS.forEach(function(key) {
-    var qid = "Q3b_" + key;
-    rowData["Q3b_" + key + "_companions"] = arrJoin(state.answers[qid]);
-    rowData["Q3b_" + key + "_companions_other"] = state.otherTexts[qid] || "";
-  });
-
-  // Rest of Section 2
-  rowData["Q4_budget"] = state.answers.Q4 || "";
-  rowData["Q5_accommodation"] = arrJoin(state.answers.Q5);
-  rowData["Q5_accommodation_other"] = state.otherTexts.Q5 || "";
-
-  var result = await postToSheet({
-    action: "submit_response",
-    columns: Object.keys(rowData),
-    responses: rowData,
-    quotaValues: { relationship: state.answers.S3, pets: state.answers.S5 },
-  });
-  console.log("Submit:", result);
-  state.endType="complete"; state.phase="end"; state.isSubmitting=false;
-  render();
+await post({action:"submit_response",responses:r,quotaValues:{relationship:st.a.S3,pets:st.a.S5}});
+st.et="complete";st.phase="end";st.sub=false;render();
+}catch(e){console.error(e);st.et="complete";st.phase="end";st.sub=false;render();}
 }
 
 // ============================================================
 // NAVIGATION
 // ============================================================
-function handleNext() {
-  clearError();
-  if(state.phase==="screener"){
-    var r=validateScreener(); if(r==="terminated") return; if(!r) return;
-    var vs=getVisibleScreener();
-    if(state.screenerPage>=vs.length-1){ state.phase="main"; state.mainPage=0; }
-    else { state.screenerPage++; }
-    window.scrollTo({top:0,behavior:"smooth"}); render(); return;
-  }
-  if(state.phase==="main"){
-    var r2=validateMain(); if(!r2) return;
-    var vm=getVisibleMain();
-    if(state.mainPage>=vm.length-1){ handleSubmit(); }
-    else { state.mainPage++; window.scrollTo({top:0,behavior:"smooth"}); render(); }
-  }
+function handleNext(){
+cErr();
+if(st.phase==="screener"){
+var r=valScr();if(r==="t")return;if(!r)return;
+var s=vs();if(st.sp>=s.length-1){st.phase="main";st.mp=0;}else{st.sp++;}
+window.scrollTo({top:0,behavior:"smooth"});render();return;
+}
+if(st.phase==="main"){
+var r2=valMain();if(!r2)return;
+var m=vm();if(st.mp>=m.length-1){doSubmit();}
+else{st.mp++;window.scrollTo({top:0,behavior:"smooth"});render();}
+}
+}
+function handleBack(){
+cErr();
+if(st.phase==="screener"){if(st.sp>0){st.sp--;render();}return;}
+if(st.phase==="main"){if(st.mp>0){st.mp--;}else{st.phase="screener";st.sp=vs().length-1;}render();}
 }
 
-function handleBack() {
-  clearError();
-  if(state.phase==="screener"){
-    if(state.screenerPage>0){ state.screenerPage--; render(); }
-    return;
-  }
-  if(state.phase==="main"){
-    if(state.mainPage>0){ state.mainPage--; }
-    else { state.phase="screener"; state.screenerPage=getVisibleScreener().length-1; }
-    render();
-  }
-}
-
-// ============================================================
-// INIT
-// ============================================================
-document.getElementById("btn-next").addEventListener("click", handleNext);
-document.getElementById("btn-back").addEventListener("click", handleBack);
-
-fetch(CONFIG.apiUrl+"?action=check_quotas")
-  .then(function(r){return r.json();})
-  .then(function(d){state.quotaCache=d.quotas||{};})
-  .catch(function(){state.quotaCache={};});
-
+document.getElementById("bn").addEventListener("click",handleNext);
+document.getElementById("bb").addEventListener("click",handleBack);
 render();
 </script>
 </body>
